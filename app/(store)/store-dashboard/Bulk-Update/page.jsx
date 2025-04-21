@@ -1,12 +1,9 @@
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import React from 'react'
 
-function BulkUpdate() {
+function bulkUpdate() {
   return (
-    <div>
-        BulkUpdate
-    </div>
+    <div>bulkUpdate</div>
   )
 }
 
-export default BulkUpdate
+export default bulkUpdate

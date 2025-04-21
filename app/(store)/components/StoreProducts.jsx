@@ -19,7 +19,7 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { SearchIcon, FilterIcon, X, Pencil } from "lucide-react";
-import { productService } from '@/services/globalservice';
+import { productService } from '@/services/globalService';
 import { authService } from '@/services/authService';
 import { 
   Select,
