@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home } from "lucide-react"
+import { Home, Users2 } from "lucide-react"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
          SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 
@@ -9,29 +9,29 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
 const items = [
   {
     title: "Dashboard",
-    url: "/store-dashboard",
+    url: "/admin-dashboard",
     icon: Home,
   },
   {
-    title: "Products",
-    url: "/store-dashboard/Products",
-    icon: Home,
+    title: "Users",
+    url: "/admin-dashboard/Users",
+    icon: Users2,
   },
-  {
-    title: "Orders",
-    url: "/store-dashboard/Orders",
-    icon: Home,
-  },
-  {
-    title: "Bulk Update",
-    url: "/store-dashboard/Bulk-Update",
-    icon: Home,
-  },
-  {
-    title: "All Products",
-    url: "/store-dashboard/Bulk-Update",
-    icon: Home,
-  },
+//   {
+//     title: "Orders",
+//     url: "/store-dashboard/Orders",
+//     icon: Home,
+//   },
+//   {
+//     title: "Bulk Update",
+//     url: "/store-dashboard/Bulk-Update",
+//     icon: Home,
+//   },
+//   {
+//     title: "All Products",
+//     url: "/store-dashboard/Bulk-Update",
+//     icon: Home,
+//   },
 ]
 
 export function AppSidebar() {

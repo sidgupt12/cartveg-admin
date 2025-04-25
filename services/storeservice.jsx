@@ -126,6 +126,36 @@ export const productService = {
     }
   },
 
+  uploadCSV: async (formData, storeId) => {
+    try {
+      console.log('Uploading CSV with storeId:', storeId);
+      
+      if (!storeId) {
+        console.warn('Store ID is missing or not set');
+        throw new Error('Store ID is required for CSV upload');
+      }
+
+      const response = await api.post('/inventory/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        params: { storeId },
+      });
+
+      console.log('CSV upload response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading CSV:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+      if (error.message.includes('Network Error')) {
+        throw new Error('CORS error: Server does not allow POST requests for CSV upload from this origin. Please contact the server administrator.');
+      }
+      throw error;
+    }
+  },
+
 };
 
 export default api;
