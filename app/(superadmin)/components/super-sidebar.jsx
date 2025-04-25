@@ -17,11 +17,11 @@ const items = [
     url: "/admin-dashboard/Users",
     icon: Users2,
   },
-//   {
-//     title: "Orders",
-//     url: "/store-dashboard/Orders",
-//     icon: Home,
-//   },
+  {
+    title: "Store Service",
+    url: "/admin-dashboard/Store-Management",
+    icon: Home,
+  },
 //   {
 //     title: "Bulk Update",
 //     url: "/store-dashboard/Bulk-Update",

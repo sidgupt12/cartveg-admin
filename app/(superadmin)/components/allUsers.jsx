@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { userService } from '@/services/superservice';
-import { Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Clock, Mail, Phone, MapPin, Package, User, X } from 'lucide-react';
+import { Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Clock, Mail, Phone, MapPin, Package, User } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
@@ -16,7 +16,6 @@ const UserManagement = () => {
     name: '',
     email: '',
     phone: '',
-    addresses: [{ flatno: '', street: '', city: '', state: '', pincode: '' }],
     isActivate: true,
   });
   const [loading, setLoading] = useState(false);
@@ -28,7 +27,7 @@ const UserManagement = () => {
   const addPopupRef = useRef(null);
   const updatePopupRef = useRef(null);
   const router = useRouter();
-  const limit = 15; // Set limit to 15 users per page
+  const limit = 15;
 
   // Handle outside click to close popups
   useEffect(() => {
@@ -84,7 +83,6 @@ const UserManagement = () => {
     try {
       await userService.deleteUser({ id });
       setUsers(users.filter((user) => user._id !== id));
-      // Refetch if the page might be empty
       if (filteredUsers.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       } else {
@@ -114,7 +112,6 @@ const UserManagement = () => {
         name: '',
         email: '',
         phone: '',
-        addresses: [{ flatno: '', street: '', city: '', state: '', pincode: '' }],
       });
       fetchUsers(currentPage);
     } catch (err) {
@@ -141,7 +138,6 @@ const UserManagement = () => {
           name: formData.name,
           phone: formData.phone,
           isActivate: formData.isActivate,
-          addresses: formData.addresses,
         },
       });
       setIsUpdatePopupOpen(false);
@@ -149,7 +145,6 @@ const UserManagement = () => {
         name: '',
         email: '',
         phone: '',
-        addresses: [{ flatno: '', street: '', city: '', state: '', pincode: '' }],
         isActivate: true,
       });
       fetchUsers(currentPage);
@@ -173,35 +168,9 @@ const UserManagement = () => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      addresses: user.addresses.length
-        ? user.addresses
-        : [{ flatno: '', street: '', city: '', state: '', pincode: '' }],
       isActivate: user.isActivate ?? true,
     });
     setIsUpdatePopupOpen(true);
-  };
-
-  // Add a new address field
-  const addAddress = () => {
-    setFormData({
-      ...formData,
-      addresses: [
-        ...formData.addresses,
-        { flatno: '', street: '', city: '', state: '', pincode: '' },
-      ],
-    });
-  };
-
-  // Remove an address field
-  const removeAddress = (index) => {
-    if (formData.addresses.length === 1) {
-      setError('At least one address is required');
-      return;
-    }
-    setFormData({
-      ...formData,
-      addresses: formData.addresses.filter((_, i) => i !== index),
-    });
   };
 
   // Format date for display
@@ -263,7 +232,6 @@ const UserManagement = () => {
               key={user._id}
               className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-100 transition-transform hover:scale-[1.01]"
             >
-              {/* Collapsed View */}
               <div
                 className="flex justify-between items-center cursor-pointer"
                 onClick={() =>
@@ -307,7 +275,6 @@ const UserManagement = () => {
                 </div>
               </div>
 
-              {/* Expanded View */}
               {expandedUser === user._id && (
                 <div className="mt-6 border-t border-gray-200 pt-6 animate-slide-down">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
@@ -455,91 +422,6 @@ const UserManagement = () => {
                   pattern="\d{10}"
                   title="Phone number must be 10 digits"
                 />
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium text-gray-900 text-sm">Addresses</h3>
-                  <button
-                    type="button"
-                    onClick={addAddress}
-                    className="text-green-600 hover:text-green-800 flex items-center gap-1 text-sm transition"
-                  >
-                    <Plus className="h-4 w-4" /> Add Address
-                  </button>
-                </div>
-                {formData.addresses.map((addr, index) => (
-                  <div
-                    key={index}
-                    className="mb-3 p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition relative"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => removeAddress(index)}
-                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    <p className="font-medium text-sm mb-2 text-gray-800">Address {index + 1}</p>
-                    <input
-                      type="text"
-                      placeholder="Flat No"
-                      value={addr.flatno}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].flatno = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Street"
-                      value={addr.street}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].street = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={addr.city}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].city = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="State"
-                      value={addr.state}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].state = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Pincode"
-                      value={addr.pincode}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].pincode = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                      required
-                    />
-                  </div>
-                ))}
                 <div className="flex justify-end gap-3 mt-4">
                   <button
                     type="button"
@@ -599,86 +481,6 @@ const UserManagement = () => {
                   />
                   Active
                 </label>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium text-gray-900 text-sm">Addresses</h3>
-                  <button
-                    type="button"
-                    onClick={addAddress}
-                    className="text-green-600 hover:text-green-800 flex items-center gap-1 text-sm transition"
-                  >
-                    <Plus className="h-4 w-4" /> Add Address
-                  </button>
-                </div>
-                {formData.addresses.map((addr, index) => (
-                  <div
-                    key={index}
-                    className="mb-3 p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition relative"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => removeAddress(index)}
-                      className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    <p className="font-medium text-sm mb-2 text-gray-800">Address {index + 1}</p>
-                    <input
-                      type="text"
-                      placeholder="Flat No"
-                      value={addr.flatno}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].flatno = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Street"
-                      value={addr.street}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].street = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                    />
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={addr.city}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].city = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                    />
-                    <input
-                      type="text"
-                      placeholder="State"
-                      value={addr.state}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].state = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Pincode"
-                      value={addr.pincode}
-                      onChange={(e) => {
-                        const newAddresses = [...formData.addresses];
-                        newAddresses[index].pincode = e.target.value;
-                        setFormData({ ...formData, addresses: newAddresses });
-                      }}
-                      className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
-                    />
-                  </div>
-                ))}
                 <div className="flex justify-end gap-3 mt-4">
                   <button
                     type="button"
