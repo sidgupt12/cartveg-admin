@@ -27,11 +27,11 @@ const items = [
     url: "/admin-dashboard/Coupons",
     icon: Ticket,
   },
-//   {
-//     title: "All Products",
-//     url: "/store-dashboard/Bulk-Update",
-//     icon: Home,
-//   },
+  {
+    title: "Categories",
+    url: "/admin-dashboard/Category",
+    icon: Home,
+  },
 ]
 
 export function AppSidebar() {

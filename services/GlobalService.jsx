@@ -2,7 +2,6 @@
 'use client';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { authService } from './authService'; // Ensure authService is imported
 
 // Create the API instance
 const globalApi = axios.create({
@@ -72,5 +71,48 @@ globalApi.interceptors.response.use(
 );
 
 
+// Category Service
+export const categoryService = {
+  getCategories: async () => {
+    try {
+      const response = await globalApi.get('/category/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+
+  createCategory: async (categoryData) => {
+    try {
+      const response = await globalApi.post('/category/', categoryData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  },
+
+  updateCategory: async (categoryData) => {
+    try {
+      const response = await globalApi.put('/category/', categoryData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
+
+  deleteCategory: async (categoryId) => {
+    try {
+      const response = await globalApi.delete('/category/', { data: { id: categoryId } });
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  },
+
+};
 
 export default globalApi;
