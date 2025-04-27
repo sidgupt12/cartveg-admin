@@ -469,5 +469,93 @@ export const storeService = {
 
 };
 
+// Coupon Service
+export const couponService = {
+  createCoupon: async ({ code, expiry, minValue, maxUsage, offValue }) => {
+    try {
+      console.log('Creating coupon with body:', { code, expiry, minValue, maxUsage, offValue });
+      
+      // Build the request body
+      const body = { code, expiry, minValue, maxUsage, offValue };
+  
+      const response = await superApi.post('/admin/coupon/create', body);
+      console.log('Create coupon API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating coupon:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  getCoupons: async () => {
+    try {
+      console.log('Making API call to coupons');
+      const response = await superApi.get('/admin/coupon');
+      console.log('Coupons API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching coupons:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  changeCouponStatus: async ({ id, isActive }) => {
+    try {
+      console.log('Changing coupon status with params:', { id, isActive });
+      
+      // Build the request body
+      const body = { isActive };
+  
+      const response = await superApi.put('/admin/coupon/status', body, {
+        params: { id },
+      });
+      console.log('Change coupon status API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error changing coupon status:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  updateCoupon: async ({ id, code, expiry, minValue, maxUsage, offValue }) => {
+    try {
+      console.log('Updating coupon with params:', { id, code, expiry, minValue, maxUsage, offValue });
+      
+      // Build the request body with only provided fields
+      const body = {};
+      if (code !== undefined) body.code = code;
+      if (expiry !== undefined) body.expiry = expiry;
+      if (minValue !== undefined) body.minValue = minValue;
+      if (maxUsage !== undefined) body.maxUsage = maxUsage;
+      if (offValue !== undefined) body.offValue = offValue;
+  
+      const response = await superApi.put('/admin/coupon/update', body, {
+        params: { id },
+      });
+      console.log('Update coupon API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating coupon:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+};
+
 
 export default superApi;

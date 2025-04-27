@@ -12,8 +12,9 @@ const StoreCard = ({ store, onEdit, onAssignManager }) => {
           <p className="text-gray-600 text-sm">{store.phone}</p>
           <p className="text-gray-600 text-sm">{store.email}</p>
           <p className="text-gray-600 text-sm">Lat: {store.latitude}, Long: {store.longitude}</p>
-          <p className="text-gray-600 text-sm">Radius: {store.radius}m</p>
+          <p className="text-gray-600 text-sm">Radius: {store.radius} Km</p>
           <p className="text-gray-600 text-sm">Manager: {store.manager?.name || 'None'}</p>
+          <p className="text-gray-600 text-sm">Store Id: {store._id || 'None'}</p>
         </div>
         <div className="flex items-center gap-4">
           <button
