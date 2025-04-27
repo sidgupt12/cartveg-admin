@@ -32,6 +32,11 @@ const items = [
     url: "/admin-dashboard/Category",
     icon: Home,
   },
+  {
+    title: "Cashback",
+    url: "/admin-dashboard/Cashback",
+    icon: Home,
+  },
 ]
 
 export function AppSidebar() {

@@ -557,5 +557,112 @@ export const couponService = {
   },
 };
 
+// Cashback Service
+export const cashbackService = {
+  getCashbacks: async () => {
+    try {
+      console.log('Fetching cashbacks');
+      const response = await superApi.get('/admin/cashback');
+      console.log('Get cashbacks API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching cashbacks:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid request');
+      }
+      throw error;
+    }
+  },
+
+  createCashback: async ({ min_purchase_amount, cashback_amount, isActive, description }) => {
+    try {
+      // Validate required fields
+      if (!min_purchase_amount || typeof min_purchase_amount !== 'number' || min_purchase_amount <= 0) {
+        throw new Error('min_purchase_amount is required and must be a positive number');
+      }
+      if (!cashback_amount || typeof cashback_amount !== 'number' || cashback_amount <= 0) {
+        throw new Error('cashback_amount is required and must be a positive number');
+      }
+      if (isActive === undefined || typeof isActive !== 'boolean') {
+        throw new Error('isActive is required and must be a boolean');
+      }
+      if (!description || typeof description !== 'string') {
+        throw new Error('description is required and must be a string');
+      }
+
+      const payload = {
+        min_purchase_amount,
+        cashback_amount,
+        isActive,
+        description,
+      };
+
+      console.log('Creating cashback with data:', payload);
+
+      const response = await superApi.post('/admin/cashback/create', payload);
+
+      console.log('Create cashback API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating cashback:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid cashback data provided');
+      }
+      throw error;
+    }
+  },
+
+  updateCashbackStatus: async ({ id, isActive }) => {
+    try {
+      // Validate required fields
+      if (!id || typeof id !== 'string') {
+        throw new Error('id is required and must be a string');
+      }
+      if (isActive === undefined || typeof isActive !== 'boolean') {
+        throw new Error('isActive is required and must be a boolean');
+      }
+  
+      const payload = {
+        id,
+        isActive,
+      };
+  
+      console.log('Updating cashback status with data:', payload);
+  
+      const response = await superApi.put('/admin/cashback/status', payload);
+  
+      console.log('Update cashback status API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating cashback status:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid cashback data provided');
+      } else if (error.response?.status === 404) {
+        throw new Error('Cashback not found');
+      }
+      throw error;
+    }
+  },
+
+};
+
 
 export default superApi;

@@ -115,4 +115,25 @@ export const categoryService = {
 
 };
 
+// Image Service (add to GlobalService.jsx)
+export const imageService = {
+  uploadImage: async (imageFile) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await globalApi.post('/cloud/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'access_token': process.env.NEXT_PUBLIC_ACCESS_TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  },
+};
+
 export default globalApi;

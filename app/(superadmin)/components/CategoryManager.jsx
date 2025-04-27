@@ -1,6 +1,6 @@
 // app/components/CategoryManager.jsx
 'use client';
-import { categoryService } from '@/services/GlobalService';
+import { categoryService, imageService } from '@/services/GlobalService';
 import { useState, useEffect } from 'react';
 import {
   Card,
@@ -58,31 +58,62 @@ const CategoryManager = () => {
   const CategoryForm = ({ onSubmit, initialData = {}, isUpdate = false }) => {
     const [formData, setFormData] = useState({
       name: initialData.name || '',
-      image: initialData.image || '',
+      image: initialData.image || '', // Stores the image URL
     });
+    const [imageFile, setImageFile] = useState(null); // Stores the selected file
     const [formError, setFormError] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
 
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
+    const handleNameChange = (e) => {
+      setFormData((prev) => ({ ...prev, name: e.target.value }));
+    };
+
+    const handleImageChange = (e) => {
+      const file = e.target.files[0];
+      if (file && ['image/jpeg', 'image/png'].includes(file.type)) {
+        setImageFile(file);
+        setFormError(null);
+      } else {
+        setFormError('Please select a valid JPG or PNG image.');
+        setImageFile(null);
+      }
     };
 
     const handleSubmit = async (e) => {
       e.preventDefault();
       setFormLoading(true);
       setFormError(null);
+
       try {
+        let imageUrl = formData.image;
+
+        // Upload image if a new file is selected
+        if (imageFile) {
+          const uploadResponse = await imageService.uploadImage(imageFile);
+          if (uploadResponse.url) {
+            imageUrl = uploadResponse.url;
+          } else {
+            throw new Error('Image upload failed: No URL returned');
+          }
+        }
+
+        // Ensure an image URL is provided
+        if (!imageUrl) {
+          throw new Error('Please upload an image.');
+        }
+
         const data = {
           name: formData.name,
-          image: formData.image,
+          image: imageUrl,
         };
+
         if (isUpdate) {
           data.id = initialData._id;
           await categoryService.updateCategory(data);
         } else {
           await categoryService.createCategory(data);
         }
+
         await fetchCategories();
         onSubmit();
       } catch (err) {
@@ -111,7 +142,7 @@ const CategoryManager = () => {
             id="name"
             name="name"
             value={formData.name}
-            onChange={handleChange}
+            onChange={handleNameChange}
             required
             placeholder="Enter category name"
             className="rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500"
@@ -119,22 +150,21 @@ const CategoryManager = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="image" className="text-sm font-medium text-gray-700">
-            Image URL
+            Upload Image (JPG/PNG)
           </Label>
           <Input
-            type="url"
+            type="file"
             id="image"
             name="image"
-            value={formData.image}
-            onChange={handleChange}
-            required
-            placeholder="Enter image URL"
+            accept="image/jpeg,image/png"
+            onChange={handleImageChange}
+            required={!isUpdate || !formData.image} // Required only if no existing image
             className="rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500"
           />
-          {formData.image && (
+          {(formData.image || imageFile) && (
             <div className="mt-2">
               <img
-                src={formData.image}
+                src={imageFile ? URL.createObjectURL(imageFile) : formData.image}
                 alt="Preview"
                 className="h-16 w-16 object-cover rounded-md"
                 onError={(e) => (e.target.src = '/placeholder.png')}
