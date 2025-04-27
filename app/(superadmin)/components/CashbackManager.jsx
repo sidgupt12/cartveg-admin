@@ -1,6 +1,5 @@
 // app/components/CashbackManager.jsx
 'use client';
-import { cashbackService } from '@/services/storeservice';
 import { useState, useEffect } from 'react';
 import {
   Card,
@@ -21,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Plus } from 'lucide-react';
+import { cashbackService } from '@/services/superservice';
 
 const CashbackManager = () => {
   const [cashbacks, setCashbacks] = useState([]);
