@@ -1,6 +1,6 @@
 // app/components/CashbackManager.jsx
 'use client';
-import { cashbackService } from '@/services/SuperService';
+import { cashbackService } from '@/services/storeservice';
 import { useState, useEffect } from 'react';
 import {
   Card,
