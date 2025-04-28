@@ -103,7 +103,7 @@ export const authService = {
             });
             
             // If user is a store manager and store data exists, store it
-            if (data.user.role === 'storemanager' && data.store) {
+            if (data.user.role === 'storemanager' || data.user.role === 'storeadmin' && data.store) {
               Cookies.set('storeId', data.store._id, {
                 expires: new Date(data.tokenValidTill),
                 secure: true,
@@ -120,6 +120,7 @@ export const authService = {
             // Define the role redirect map here before using it
             const roleRedirectMap = {
               storemanager: '/store-dashboard',
+              storeadmin: '/store-dashboard',
               superadmin: '/admin-dashboard',
             };
             
