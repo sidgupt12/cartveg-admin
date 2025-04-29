@@ -103,6 +103,56 @@ export const productService = {
     }
   },
 
+  getAllProducts: async ({ page = 1, limit = 10 } = {}) => {
+    const storeId = authService.getStoreId();
+    console.log('Store ID from getProducts is this :', storeId);
+
+    if (!storeId) {
+      console.warn('Store ID is missing or not set in Cookies');
+      return;
+    }
+
+    try {
+      console.log('Making API call to inventory with params:', { page, limit, storeId });
+      const response = await api.get('/inventory/product/', {
+        params: {
+          page,
+          limit,
+          storeId,
+        },
+      });
+
+      console.log('Inventory API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching inventory:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
+  addProduct: async ({ storeId, products }) => {
+    try {
+      console.log('Adding product(s) with params:', { storeId, products });
+      
+      const body = { storeId, products };
+      
+      const response = await api.post('/inventory/add', body);
+      console.log('Add product API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding product(s):', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw error;
+    }
+  },
+
   updateProduct: async ({ storeId, productId, quantity, availability, threshold }) => {
     try {
       console.log('Updating product with params:', { storeId, productId, quantity, availability, threshold });
@@ -150,7 +200,7 @@ export const productService = {
         headers: error.response?.headers,
       });
       if (error.message.includes('Network Error')) {
-        throw new Error('CORS error: Server does not allow POST requests for CSV upload from this origin. Please contact the server administrator.');
+        throw new Error('An Error occured try again later, or contact administrator');
       }
       throw error;
     }

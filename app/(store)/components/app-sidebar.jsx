@@ -29,7 +29,7 @@ const items = [
   },
   {
     title: "All Products",
-    url: "/store-dashboard/Bulk-Update",
+    url: "/store-dashboard/AllProducts",
     icon: Home,
   },
 ]

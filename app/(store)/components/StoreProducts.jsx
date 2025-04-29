@@ -530,7 +530,7 @@ export default function StoreProducts() {
                       <p className="font-semibold text-green-600">Actual Price: ₹{product.actualPrice}</p>
                       <p className="text-gray-700 mt-1">₹{product.price}</p>
                     </div>
-                    <p className={`inline-block px-1 py-0.5 rounded mt-[-20px] ${product.availability ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <p className={`inline-block ml-[-6px] px-1 py-0.5 rounded mt-[-15px] ${product.availability ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {product.availability ? 'Available' : 'Not Available'}
                     </p>
                   </div>
