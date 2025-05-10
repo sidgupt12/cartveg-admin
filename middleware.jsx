@@ -24,7 +24,7 @@ export function middleware(request) {
 
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/store-dashboard') && role !== 'storemanager' && role !== 'storeadmin') {
+  if (pathname.startsWith('/store-dashboard') && role !== 'storemanager' && role !== 'storeadmin' && role !== 'superadmin') {
     return NextResponse.redirect(new URL('/unauthorized', request.url));
   }
 

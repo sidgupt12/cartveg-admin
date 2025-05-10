@@ -8,6 +8,9 @@ import { useRouter } from 'next/navigation';
 import CreateAdminForm from './CreateAdminForm';
 import AssignManagerForm from './AssignManagerForm';
 import StoreCard from './StoreCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
 
 // Dynamically import StoreForm with SSR disabled
 const StoreForm = dynamic(() => import('./StoreForm'), { ssr: false });
@@ -26,6 +29,7 @@ const StoreAdminManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
   const router = useRouter();
+  const [isStoreRedirectDialogOpen, setIsStoreRedirectDialogOpen] = useState(false);
 
   // Fetch stores
   useEffect(() => {
@@ -60,6 +64,23 @@ const StoreAdminManagement = () => {
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+    }
+  };
+
+  const handleStoreRedirect = (store) => {
+    setSelectedStore(store);
+    setIsStoreRedirectDialogOpen(true);
+  };
+
+  const confirmStoreRedirect = () => {
+    if (selectedStore) {
+      Cookies.set('storeId', selectedStore._id, {
+        expires: 7, // 7 days expiry
+        secure: true,
+        sameSite: 'Strict',
+      });
+      
+      window.location.href = '/store-dashboard';
     }
   };
 
@@ -119,6 +140,7 @@ const StoreAdminManagement = () => {
                 setSelectedStore(store);
                 setIsAssignManagerPopupOpen(true);
               }}
+              onRedirect={handleStoreRedirect}
             />
           ))}
         </div>
@@ -181,6 +203,32 @@ const StoreAdminManagement = () => {
             setError={setError}
           />
         )}
+
+        {/* Store Redirect Confirmation Dialog */}
+        <Dialog open={isStoreRedirectDialogOpen} onOpenChange={setIsStoreRedirectDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Redirect to Store Dashboard</DialogTitle>
+              <DialogDescription>
+                You will be redirected to {selectedStore?.name}'s dashboard. This will set your current context to this store.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsStoreRedirectDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmStoreRedirect}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Custom Animation Styles */}
         <style jsx>{`

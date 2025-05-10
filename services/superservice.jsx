@@ -24,7 +24,8 @@ superApi.interceptors.request.use(
       }
 
       console.log('Request URL:', config.baseURL + config.url);
-      console.log('Request Params:', config.params);
+      console.log('Request Params:', config.params || 'None');
+      console.log('Request Body:', config.data || 'None');
 
       return config;
     } catch (error) {
@@ -662,6 +663,142 @@ export const cashbackService = {
     }
   },
 
+};
+
+export const productService = {
+  getProducts: async ({ page = 1, limit = 10 } = {}) => {
+    try {
+      console.log('Fetching products with params:', { page, limit });
+
+      const response = await superApi.get('/admin/products', {
+        params: { page, limit },
+      });
+
+      console.log('Get products API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching products:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid request parameters');
+      }
+
+      throw error;
+    }
+  },
+
+  createProduct: async ({
+    unit,
+    threshold,
+    name,
+    description,
+    price,
+    stock,
+    category,
+    origin,
+    shelfLife,
+    isAvailable,
+    image,
+    actualPrice,
+  }) => {
+    try {
+      // Basic validation
+      if (!name || typeof name !== 'string') {
+        throw new Error('Name is required and must be a string');
+      }
+      if (!price || isNaN(price) || price <= 0) {
+        throw new Error('Price is required and must be a positive number');
+      }
+      if (!stock || isNaN(stock) || stock < 0) {
+        throw new Error('Stock is required and must be a non-negative number');
+      }
+      if (!category || typeof category !== 'string') {
+        throw new Error('Category is required and must be a string');
+      }
+
+      const payload = {
+        unit,
+        threshold,
+        name,
+        description,
+        price,
+        stock,
+        category,
+        origin,
+        shelfLife,
+        isAvailable,
+        image,
+        actualPrice,
+      };
+      console.log('Creating product with data:', payload);
+
+      const response = await superApi.post('/admin/creatProducts', payload);
+      console.log('Create product API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating product:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid product data provided');
+      }
+
+      throw error;
+    }
+  },
+
+  deleteProduct: async ({ id }) => {
+    try {
+      if (!id) {
+        throw new Error('Product ID is required');
+      }
+
+      console.log('Deleting product with ID:', id);
+
+      const response = await superApi.delete('/admin/deleteProducts', {
+        data: [id], // Send as array to match backend expectation
+      });
+
+      console.log('Delete product API response:', response.data);
+
+      // Check if deletion was successful
+      if (response.data.data.deletedCount === 0) {
+        throw new Error('No products were deleted, possibly invalid or non-existent ID');
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting product:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid product ID provided');
+      } else if (error.response?.status === 404) {
+        throw new Error('Product not found');
+      } else if (error.response?.status === 500) {
+        throw new Error(error.response.data.message || 'Internal server error');
+      }
+
+      throw error;
+    }
+  },
 };
 
 

@@ -1,6 +1,6 @@
-import { Edit, User } from 'lucide-react';
+import { Edit, User, ExternalLink } from 'lucide-react';
 
-const StoreCard = ({ store, onEdit, onAssignManager }) => {
+const StoreCard = ({ store, onEdit, onAssignManager, onRedirect }) => {
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-100 transition-transform hover:scale-[1.01]">
       <div className="flex justify-between items-center">
@@ -28,6 +28,12 @@ const StoreCard = ({ store, onEdit, onAssignManager }) => {
             className="text-blue-600 hover:text-blue-800 transition"
           >
             <User className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => onRedirect(store)}
+            className="text-purple-600 hover:text-purple-800 transition"
+          >
+            <ExternalLink className="h-5 w-5" />
           </button>
         </div>
       </div>
