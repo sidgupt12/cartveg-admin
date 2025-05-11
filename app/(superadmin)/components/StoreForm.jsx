@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { storeService } from '@/services/superservice'; // Ensure this path is correct
-import { MapPin, Search, Home, Map, Phone, Mail, Circle, Maximize2, Minimize2 } from 'lucide-react';
+import { MapPin, Search, Home, Map, Phone, Mail, Circle, Maximize2, Minimize2, Navigation } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 // Make sure react-leaflet and leaflet are installed
@@ -102,7 +102,7 @@ const StoreForm = ({ store, onClose, onSuccess, setError }) => {
       radius: store?.radius || '',
     });
     setMarkerPosition([lat, lng]);
-    // We don't forcefully reset the map view here;
+    // We don't forcefully reset the map's view here;
     // it might be better to pan to the new location if the map instance exists
     if (mapRef.current) {
         mapRef.current.panTo([lat, lng]);
@@ -289,6 +289,46 @@ const StoreForm = ({ store, onClose, onSuccess, setError }) => {
     }
   };
 
+  // Add getCurrentLocation function
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setError(''); // Clear any previous errors
+    
+    // Force a new location request by setting enableHighAccuracy to true
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0 // Force a new location request
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // Update marker position
+        setMarkerPosition([latitude, longitude]);
+        // Update form data
+        setFormData(prev => ({
+          ...prev,
+          latitude,
+          longitude
+        }));
+        // Pan map to location
+        if (mapRef.current) {
+          mapRef.current.flyTo([latitude, longitude], 14);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setError('Unable to retrieve your location. Please check your location permissions.');
+      },
+      options // Add the options to force a new location request
+    );
+  };
+
   // --- JSX Rendering ---
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 bg-black/70 z-50 backdrop-blur-sm">
@@ -356,15 +396,26 @@ const StoreForm = ({ store, onClose, onSuccess, setError }) => {
                 <Search className="h-4 w-4" />
               </button>
             </div>
-            {/* Minimize Button */}
-            <button
-              type="button"
-              onClick={() => setIsMapExpanded(false)}
-              className="ml-4 bg-green-600 text-white p-3 rounded-full hover:bg-green-700 transition shadow-lg"
-              aria-label="Minimize map"
-            >
-              <Minimize2 className="h-5 w-5" />
-            </button>
+            {/* Location and Minimize Buttons */}
+            <div className="flex gap-2 ml-4">
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                className="bg-green-600 text-white px-4 py-3 rounded-xl hover:bg-green-700 transition shadow-lg flex items-center gap-2"
+                aria-label="Get current location"
+              >
+                <Navigation className="h-5 w-5" />
+                <span className="text-sm font-medium">Current Location</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMapExpanded(false)}
+                className="bg-green-600 text-white p-3 rounded-full hover:bg-green-700 transition shadow-lg"
+                aria-label="Minimize map"
+              >
+                <Minimize2 className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -513,7 +564,7 @@ const StoreForm = ({ store, onClose, onSuccess, setError }) => {
               </div>
 
               {/* Small Embedded Map */}
-              <div className="h-[250px] rounded-xl overflow-hidden border border-gray-300 shadow-sm">
+              <div className="h-[250px] rounded-xl overflow-hidden border border-gray-300 shadow-sm relative">
                 <MapContainer
                   // No 'key' prop needed
                   center={initialMapCenter} // Initial center
@@ -539,6 +590,16 @@ const StoreForm = ({ store, onClose, onSuccess, setError }) => {
                   {/* Attach event handlers */}
                   <MapEvents />
                 </MapContainer>
+                {/* Location Button for Small Map */}
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="absolute bottom-4 right-4 bg-green-600 text-white px-3 py-2 rounded-xl hover:bg-green-700 transition shadow-lg z-[1000] flex items-center gap-2"
+                  aria-label="Get current location"
+                >
+                  <Navigation className="h-4 w-4" />
+                  <span className="text-sm font-medium">Current Location</span>
+                </button>
               </div>
             </div>
 
