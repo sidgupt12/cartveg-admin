@@ -215,14 +215,14 @@ const StoreAdminManagement = () => {
             </DialogHeader>
             <div className="flex justify-end gap-2">
               <Button
-                variant="outline"
+                variant="outline" 
                 onClick={() => setIsStoreRedirectDialogOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 onClick={confirmStoreRedirect}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
                 Continue
               </Button>

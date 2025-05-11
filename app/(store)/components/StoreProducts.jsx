@@ -232,7 +232,7 @@ export default function StoreProducts() {
     return (
       <div className="container mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6 text-green-600 text-center">Store Inventory</h1>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6 pr-2">
           <ProductCardSkeleton />
         </div>
       </div>
@@ -478,7 +478,7 @@ export default function StoreProducts() {
       {filteredProducts.length === 0 ? (
         <div className="text-center text-gray-500 py-10">No products available</div>
       ) : (
-        <div className="grid xl:grid-cols-5 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6 pr-2">
+        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6 pr-2">
           {filteredProducts.map((product) => (
             <Card   
               key={product.productId} 

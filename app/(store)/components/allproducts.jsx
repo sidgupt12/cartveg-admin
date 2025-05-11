@@ -349,7 +349,7 @@ export default function AllProductsInventory() {
         <p className="text-sm text-gray-500 italic text-center mb-6">
           (*products marked in red are not available in this store)
         </p>
-        <div className="grid xl:grid-cols-5 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-4">
+        <div className="grid xl:grid-cols-4 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1 gap-4">
           <ProductCardSkeleton />
         </div>
       </div>
@@ -675,7 +675,7 @@ export default function AllProductsInventory() {
           {searchTerm && <p className="text-sm">Try clearing your search or filters.</p>}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
             <Card
               key={product.productId}
