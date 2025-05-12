@@ -31,24 +31,47 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner"; // Assuming sonner is the correct path
 
+// Helper functions for localStorage
+const getCurrentPage = () => {
+  if (typeof window !== 'undefined') {
+    return parseInt(localStorage.getItem('allProductsCurrentPage')) || 1;
+  }
+  return 1;
+};
+
+const setCurrentPage = (page) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('allProductsCurrentPage', page.toString());
+  }
+};
+
 // Shimmer Loading Component
 const ProductCardSkeleton = () => {
-  return Array(10).fill(0).map((_, index) => (
+  return Array(8).fill(0).map((_, index) => (
     <Card
       key={index}
-      className="md:w-[250px] lg:w-[220px] xl:w-[220px] h-[360px] bg-white shadow-sm border"
+      className="h-[360px] flex flex-col bg-white rounded-lg shadow-md border border-gray-200"
     >
       <div className="animate-pulse">
-        <div className="h-40 bg-gray-200 rounded-t-md"></div>
-        <CardHeader className="p-3">
-          <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </CardHeader>
-        <CardContent className="p-3 space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </CardContent>
+        {/* Header */}
+        <div className="p-3 border-b border-gray-100">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        
+        {/* Image */}
+        <div className="p-3 pt-2">
+          <div className="w-full h-40 bg-gray-200 rounded-md mb-2"></div>
+          
+          {/* Price and Stock */}
+          <div className="space-y-2 mt-2">
+            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+            <div className="flex justify-between items-center">
+              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </Card>
   ));
@@ -57,12 +80,13 @@ const ProductCardSkeleton = () => {
 export default function AllProductsInventory() {
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({
-    currentPage: 1,
+    currentPage: getCurrentPage(), // Now this will work
     totalPages: 0,
     totalProducts: 0,
-    limit: 10,
+    limit: 12,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -83,38 +107,26 @@ export default function AllProductsInventory() {
   const [addSuccess, setAddSuccess] = useState(null); // Kept for potential future use, though toast is primary feedback
   const [isAddingProduct, setIsAddingProduct] = useState(false);
 
-  // --- Fetch All Products Function ---
   const fetchAllProducts = async (page = 1) => {
-    // NOTE: Consider adding searchTerm and filters to the API call parameters
-    // for server-side filtering/sorting/searching.
-    // Example: productService.getAllProducts({ page, limit: 10, search: searchTerm, ...filters });
     try {
       if (!authService.checkTokenValidity()) {
         console.error('Token is invalid or missing');
         authService.logout();
-        window.location.href = '/'; // Redirect to login
+        window.location.href = '/';
         return;
       }
 
       console.log(`Fetching all products - Page: ${page}, Limit: ${pagination.limit}`);
-      setIsLoading(true);
-      setError(null); // Clear previous errors
+      setIsPageLoading(true);
+      setError(null);
 
-      // Pass current page and limit
       const response = await productService.getAllProducts({
         page,
         limit: pagination.limit,
-        // Add other parameters here if API supports them:
-        // search: searchTerm,
-        // sortBy: filters.sortBy,
-        // orderBy: filters.orderBy,
-        // category: filters.category,
-        // availability: filters.availability,
       });
 
       console.log('API response (getAllProducts):', response);
 
-      // Assuming API response structure is { success: true, data: { products: [], pagination: {} } }
       if (response && response.success && response.data) {
         const productsData = response.data.products.map(product => ({
           productId: product._id,
@@ -137,11 +149,11 @@ export default function AllProductsInventory() {
         }));
 
         setProducts(productsData);
-        setPagination(response.data.pagination || { currentPage: 1, totalPages: 0, totalProducts: 0, limit: 10 });
+        setPagination(response.data.pagination || { currentPage: 1, totalPages: 0, totalProducts: 0, limit: 12 });
+        setCurrentPage(page); // Save current page to localStorage
       } else {
-         throw new Error(response?.message || 'Failed to fetch products: Invalid API response structure');
+        throw new Error(response?.message || 'Failed to fetch products: Invalid API response structure');
       }
-
     } catch (error) {
       console.error('Fetch All Products Error:', {
         message: error.message,
@@ -150,12 +162,19 @@ export default function AllProductsInventory() {
       });
       const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch products';
       setError(errorMessage);
-      setProducts([]); // Clear products on error
-      setPagination({ currentPage: 1, totalPages: 0, totalProducts: 0, limit: 10 }); // Reset pagination
+      setProducts([]);
+      setPagination({ currentPage: 1, totalPages: 0, totalProducts: 0, limit: 12 });
     } finally {
       setIsLoading(false);
+      setIsPageLoading(false);
     }
   };
+
+  // Load saved page on component mount
+  useEffect(() => {
+    const savedPage = getCurrentPage();
+    fetchAllProducts(savedPage);
+  }, []);
 
   // --- Add Product Function (Corrected) ---
   const handleAddProduct = async () => {
@@ -248,48 +267,42 @@ export default function AllProductsInventory() {
   };
 
 
-  // --- Effects ---
-  useEffect(() => {
-    console.log('AllProductsInventory component mounted');
-    fetchAllProducts(); // Fetch initial data
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Dependency array includes pagination.limit if it can change
-
-
   // --- Event Handlers ---
   const handleSearch = () => {
-    // TODO: Ideally, pass searchTerm to fetchAllProducts for server-side search
-    fetchAllProducts(1); // Reset to page 1 for new search/filter
+    setCurrentPage(1); // Reset to page 1 when searching
+    fetchAllProducts(1);
   };
 
   const clearSearch = () => {
     setSearchTerm('');
-    // TODO: Pass empty searchTerm to fetchAllProducts if using server-side search
-    fetchAllProducts(1); // Reset to page 1
+    setCurrentPage(1); // Reset to page 1 when clearing search
+    fetchAllProducts(1);
   };
 
   const handleNextPage = () => {
     if (pagination.currentPage < pagination.totalPages) {
-      fetchAllProducts(pagination.currentPage + 1);
+      const nextPage = pagination.currentPage + 1;
+      fetchAllProducts(nextPage);
     }
   };
 
   const handlePrevPage = () => {
     if (pagination.currentPage > 1) {
-      fetchAllProducts(pagination.currentPage - 1);
+      const prevPage = pagination.currentPage - 1;
+      fetchAllProducts(prevPage);
     }
   };
 
   const handleFilterSubmit = () => {
     setIsFilterOpen(false);
-    // TODO: Pass filters to fetchAllProducts for server-side filtering
-    fetchAllProducts(1); // Reset to page 1 for new filters
+    setCurrentPage(1); // Reset to page 1 when applying filters
+    fetchAllProducts(1);
   };
 
    const handleClearFilters = () => {
     setFilters({ sortBy: 'price', orderBy: 'asc', category: 'all', availability: 'both' });
-    // TODO: Pass default/cleared filters to fetchAllProducts
-    fetchAllProducts(1); // Reset to page 1
+    setCurrentPage(1); // Reset to page 1 when clearing filters
+    fetchAllProducts(1);
     setIsFilterOpen(false);
   };
 
@@ -669,115 +682,147 @@ export default function AllProductsInventory() {
 
 
       {/* Products Grid */}
-      {filteredProducts.length === 0 && !isLoading ? (
-        <div className="text-center text-gray-500 py-16">
-          <p className="mb-2">No products found matching your current criteria.</p>
-          {searchTerm && <p className="text-sm">Try clearing your search or filters.</p>}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <Card
-              key={product.productId}
-              className={`
-                h-[360px] flex flex-col
-                bg-white rounded-lg shadow-md hover:shadow-xl
-                transition-all duration-200 ease-in-out
-                cursor-pointer overflow-hidden
-                border ${ /* Conditional Border Styling */
-                  product.inventory?.inventoryStatus === 'outOfStock'
-                    ? 'border-red-300 bg-red-50/50'
-                    : (product.inventory?.quantity ?? Infinity) < (product.inventory?.threshold ?? 0)
-                    ? 'border-yellow-300 bg-yellow-50/50'
-                    : 'border-gray-200'
-                }
-              `}
-              onClick={() => openDetailsDialog(product)}
-              role="button" // Accessibility
-              tabIndex={0} // Make focusable
-              onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') openDetailsDialog(product); }} // Keyboard activation
-            >
-              {/* Card Header */}
-              <CardHeader className="p-3 relative border-b border-gray-100">
-                <CardTitle className="text-sm font-semibold text-gray-800 truncate pr-8" title={product.name}> {/* Tooltip for long names */}
-                    {product.name}
-                </CardTitle>
-                <CardDescription className="text-xs text-gray-500 truncate" title={`${product.category} from ${product.origin}`}>
-                  {product.category} from {product.origin}
-                </CardDescription>
-                {/* Add Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => openAddProductDialog(product, e)}
-                  className="absolute top-2 right-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full h-7 w-7 z-10" // Ensure button is clickable
-                  aria-label={`Add ${product.name} to store`}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </CardHeader>
+      <div className="relative min-h-[400px]">
+        {isPageLoading && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <Loader2 className="h-10 w-10 animate-spin text-green-600" />
+                <div className="absolute inset-0 bg-white/50 rounded-full blur-sm"></div>
+              </div>
+              <p className="text-sm font-medium text-gray-700">Loading products...</p>
+            </div>
+          </div>
+        )}
+        
+        {filteredProducts.length === 0 && !isLoading ? (
+          <div className="text-center text-gray-500 py-16">
+            <p className="mb-2">No products found matching your current criteria.</p>
+            {searchTerm && <p className="text-sm">Try clearing your search or filters.</p>}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+            {filteredProducts.map((product) => (
+              <Card
+                key={product.productId}
+                className={`
+                  h-[360px] flex flex-col
+                  bg-white rounded-lg shadow-md hover:shadow-xl
+                  transition-all duration-200 ease-in-out
+                  cursor-pointer overflow-hidden
+                  border ${ /* Conditional Border Styling */
+                    product.inventory?.inventoryStatus === 'outOfStock'
+                      ? 'border-red-300 bg-red-50/50'
+                      : (product.inventory?.quantity ?? Infinity) < (product.inventory?.threshold ?? 0)
+                      ? 'border-yellow-300 bg-yellow-50/50'
+                      : 'border-gray-200'
+                  }
+                `}
+                onClick={() => openDetailsDialog(product)}
+                role="button" // Accessibility
+                tabIndex={0} // Make focusable
+                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') openDetailsDialog(product); }} // Keyboard activation
+              >
+                {/* Card Header */}
+                <CardHeader className="p-3 relative border-b border-gray-100">
+                  <CardTitle className="text-sm font-semibold text-gray-800 truncate pr-8" title={product.name}> {/* Tooltip for long names */}
+                      {product.name}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-500 truncate" title={`${product.category} from ${product.origin}`}>
+                    {product.category} from {product.origin}
+                  </CardDescription>
+                  {/* Add Button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => openAddProductDialog(product, e)}
+                    className="absolute top-2 right-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full h-7 w-7 z-10" // Ensure button is clickable
+                    aria-label={`Add ${product.name} to store`}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
 
-              {/* Card Content */}
-              <CardContent className="flex-grow flex flex-col p-3 pt-2">
-                {/* Image */}
-                <div className="relative w-full h-40 mb-2 flex-shrink-0">
-                  <Image
-                    src={product.image || 'https://placehold.co/200x160/e2e8f0/94a3b8?text=No+Image'} // Placeholder
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" // Responsive sizes
-                    className="object-cover rounded-md"
-                    unoptimized={!product.image?.startsWith('/')}
-                    loading="lazy" // Lazy load images below the fold
-                     onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x160/e2e8f0/94a3b8?text=Error'; }}
-                  />
-                   {/* Availability Badge on Image */}
-                   {product.inventory && (
-                      <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-medium z-10 ${product.inventory.availability ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {product.inventory.availability ? 'Available' : 'Unavailable'}
-                      </span>
-                   )}
-                </div>
+                {/* Card Content */}
+                <CardContent className="flex-grow flex flex-col p-3 pt-2">
+                  {/* Image */}
+                  <div className="relative w-full h-40 mb-2 flex-shrink-0">
+                    <Image
+                      src={product.image || 'https://placehold.co/200x160/e2e8f0/94a3b8?text=No+Image'} // Placeholder
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" // Responsive sizes
+                      className="object-cover rounded-md"
+                      unoptimized={!product.image?.startsWith('/')}
+                      loading="lazy" // Lazy load images below the fold
+                       onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x160/e2e8f0/94a3b8?text=Error'; }}
+                    />
+                     {/* Availability Badge on Image */}
+                     {product.inventory && (
+                        <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-medium z-10 ${product.inventory.availability ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {product.inventory.availability ? 'Available' : 'Unavailable'}
+                        </span>
+                     )}
+                  </div>
 
-                {/* Text Details */}
-                <div className="text-xs text-gray-700 mt-auto space-y-1">
-                  {/* Prices */}
-                   <div className="flex justify-between items-center">
-                      <p className="font-semibold text-green-700">Price: ₹{product.price ?? 'N/A'}</p>
-                   </div>
-                   {/* Stock and Threshold */}
-                   {product.inventory ? (
-                     <div className="flex justify-between items-center text-[11px]">
-                       <p className={`px-1 py-0.5 rounded ${
-                         product.inventory.inventoryStatus === 'outOfStock' ? 'bg-red-100 text-red-800' :
-                         (product.inventory.quantity ?? Infinity) < (product.inventory.threshold ?? 0) ? 'bg-yellow-100 text-yellow-800' :
-                         'bg-green-100 text-green-800'
-                       }`}>
-                         Stock: {product.inventory.quantity ?? 'N/A'}
-                       </p>
-                       <p className="text-gray-500">Threshold: {product.inventory.threshold ?? 'N/A'}</p>
+                  {/* Text Details */}
+                  <div className="text-xs text-gray-700 mt-auto space-y-1">
+                    {/* Prices */}
+                     <div className="flex justify-between items-center">
+                        <p className="font-semibold text-green-700">Price: ₹{product.price ?? 'N/A'}</p>
                      </div>
-                   ) : (
-                     <p className="text-xs text-gray-400 italic">Inventory N/A</p>
-                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                     {/* Stock and Threshold */}
+                     {product.inventory ? (
+                       <div className="flex justify-between items-center text-[11px]">
+                         <p className={`px-1 py-0.5 rounded ${
+                           product.inventory.inventoryStatus === 'outOfStock' ? 'bg-red-100 text-red-800' :
+                           (product.inventory.quantity ?? Infinity) < (product.inventory.threshold ?? 0) ? 'bg-yellow-100 text-yellow-800' :
+                           'bg-green-100 text-green-800'
+                         }`}>
+                           Stock: {product.inventory.quantity ?? 'N/A'}
+                         </p>
+                         <p className="text-gray-500">Threshold: {product.inventory.threshold ?? 'N/A'}</p>
+                       </div>
+                     ) : (
+                       <p className="text-xs text-gray-400 italic">Inventory N/A</p>
+                     )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Pagination Controls */}
       {pagination.totalPages > 1 && (
         <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200">
-          <Button onClick={handlePrevPage} disabled={pagination.currentPage === 1} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            Previous
+          <Button 
+            onClick={handlePrevPage} 
+            disabled={pagination.currentPage === 1 || isPageLoading} 
+            variant="outline" 
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
+          >
+            {isPageLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Previous'
+            )}
           </Button>
           <span className="text-sm text-gray-600">
             Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalProducts} total products)
           </span>
-          <Button onClick={handleNextPage} disabled={pagination.currentPage === pagination.totalPages} variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-            Next
+          <Button 
+            onClick={handleNextPage} 
+            disabled={pagination.currentPage === pagination.totalPages || isPageLoading} 
+            variant="outline" 
+            className="border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
+          >
+            {isPageLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Next'
+            )}
           </Button>
         </div>
       )}

@@ -82,16 +82,33 @@ export const productService = {
     }
 
     try {
-      console.log('Making API call to inventory with params:', { page, limit, storeId });
+      // Ensure page and limit are numbers and within valid ranges
+      const pageNum = Math.max(1, parseInt(page));
+      const limitNum = Math.max(1, parseInt(limit));
+      
+      console.log('Making API call to inventory with params:', { 
+        page: pageNum, 
+        limit: limitNum, 
+        storeId,
+        skip: (pageNum - 1) * limitNum // Add skip parameter for proper pagination
+      });
+
       const response = await api.get('/inventory/', {
         params: {
-          page,
-          limit,
+          page: pageNum,
+          limit: limitNum,
+          skip: (pageNum - 1) * limitNum,
           storeId,
         },
       });
 
-      console.log('Inventory API response:', response.data);
+      console.log('Inventory API response:', {
+        totalProducts: response.data?.data?.pagination?.totalProducts,
+        currentPage: response.data?.data?.pagination?.currentPage,
+        totalPages: response.data?.data?.pagination?.totalPages,
+        productsCount: response.data?.data?.products?.length
+      });
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching inventory:', {
@@ -206,6 +223,77 @@ export const productService = {
     }
   },
 
+};
+
+// Report Service
+export const reportService = {
+  uploadPurchaseReport: async (formData, storeId, date) => {
+    try {
+      console.log('Uploading purchase report with params:', { storeId, date });
+      
+      if (!storeId) {
+        console.warn('Store ID is missing or not set');
+        throw new Error('Store ID is required for purchase report upload');
+      }
+
+      if (!date) {
+        console.warn('Date is missing or not set');
+        throw new Error('Date is required for purchase report upload');
+      }
+
+      const response = await api.post('/report/upload-purchase-report', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        params: { storeId, date },
+      });
+
+      console.log('Purchase report upload response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading purchase report:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+      if (error.message.includes('Network Error')) {
+        throw new Error('An error occurred. Please try again later or contact administrator');
+      }
+      throw error;
+    }
+  },
+
+  getDailyReport: async (storeId, date) => {
+    try {
+      console.log('Fetching daily report with params:', { storeId, date });
+      
+      if (!storeId) {
+        console.warn('Store ID is missing or not set');
+        throw new Error('Store ID is required for fetching daily report');
+      }
+
+      if (!date) {
+        console.warn('Date is missing or not set');
+        throw new Error('Date is required for fetching daily report');
+      }
+
+      const response = await api.get('/report/store-report', {
+        params: { storeId, date },
+      });
+
+      console.log('Daily report response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching daily report:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.message.includes('Network Error')) {
+        throw new Error('An error occurred. Please try again later or contact administrator');
+      }
+      throw error;
+    }
+  },
 };
 
 export default api;

@@ -695,11 +695,9 @@ export const productService = {
 
   createProduct: async ({
     unit,
-    threshold,
     name,
     description,
     price,
-    stock,
     category,
     origin,
     shelfLife,
@@ -715,30 +713,32 @@ export const productService = {
       if (!price || isNaN(price) || price <= 0) {
         throw new Error('Price is required and must be a positive number');
       }
-      if (!stock || isNaN(stock) || stock < 0) {
-        throw new Error('Stock is required and must be a non-negative number');
-      }
       if (!category || typeof category !== 'string') {
         throw new Error('Category is required and must be a string');
       }
 
-      const payload = {
+      const payload = [{
         unit,
-        threshold,
         name,
         description,
         price,
-        stock,
         category,
         origin,
         shelfLife,
         isAvailable,
         image,
         actualPrice,
-      };
+      }];
+
       console.log('Creating product with data:', payload);
 
-      const response = await superApi.post('/admin/creatProducts', payload);
+      const response = await superApi.post('/admin/createProducts', payload);
+      
+      // Check if response has the expected structure
+      if (!response.data) {
+        throw new Error('Invalid response format from server');
+      }
+
       console.log('Create product API response:', response.data);
       return response.data;
     } catch (error) {
@@ -752,9 +752,17 @@ export const productService = {
         throw new Error('Unauthorized: Invalid or expired token');
       } else if (error.response?.status === 400) {
         throw new Error(error.response.data.message || 'Invalid product data provided');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error occurred while creating product');
       }
 
-      throw error;
+      // If it's our own error (from validation), throw it directly
+      if (error.message && !error.response) {
+        throw error;
+      }
+
+      // For any other error, throw a generic error
+      throw new Error('Failed to create product: ' + (error.message || 'Unknown error'));
     }
   },
 
