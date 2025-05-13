@@ -19,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
@@ -48,43 +47,56 @@ export default function StoreOrderManagement() {
   const [loading, setLoading] = useState(true);
   const [updatingOrder, setUpdatingOrder] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
-  const [storeId, setStoreId] = useState(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalOrders: 0
   });
 
+  const storeId = authService.getStoreId();
+
   useEffect(() => {
-    const fetchStoreId = () => {
-      const id = authService.getStoreId();
-      if (id) {
-        setStoreId(id);
-        fetchOrders(id);
-      } else {
-        toast.error('Store ID not found. Please login again.');
+    const fetchOrders = async () => {
+      if (!storeId) {
+        console.error('No store ID available');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log('Fetching orders for store:', storeId);
+        const response = await orderService.getOrders({
+          storeId,
+          page: pagination.currentPage,
+          limit: 10,
+          sortBy: 'date',
+          sortOrder: 'desc'
+        });
+        
+        if (response?.data?.success && response?.data?.data) {
+          const { orders, currentPage, totalPages, totalOrders } = response.data.data;
+          setOrders(orders || []);
+          setPagination({
+            currentPage: currentPage || 1,
+            totalPages: totalPages || 1,
+            totalOrders: totalOrders || 0
+          });
+        } else {
+          setOrders([]);
+          console.error('Invalid response format:', response);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        toast.error(error.message || 'Failed to fetch orders');
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStoreId();
-  }, []);
-
-  const fetchOrders = async (storeId) => {
-    try {
-      setLoading(true);
-      const response = await orderService.getOrders(storeId);
-      setOrders(response.data.orders);
-      setPagination({
-        currentPage: response.data.currentPage,
-        totalPages: response.data.totalPages,
-        totalOrders: response.data.totalOrders
-      });
-    } catch (error) {
-      toast.error(error.message || 'Failed to fetch orders');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchOrders();
+  }, [storeId, pagination.currentPage]);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
@@ -92,16 +104,26 @@ export default function StoreOrderManagement() {
       await orderService.updateOrder({ 
         orderId, 
         storeId, 
-        newStatus 
+        status: newStatus 
       });
       toast.success('Order status updated successfully');
-      fetchOrders(storeId);
+      // Refresh orders after update
+      const response = await orderService.getOrders({
+        storeId,
+        page: pagination.currentPage,
+        limit: 10,
+        sortBy: 'date',
+        sortOrder: 'desc'
+      });
+      if (response?.data?.success && response?.data?.data) {
+        const { orders } = response.data.data;
+        setOrders(orders || []);
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to update order status');
     } finally {
       setUpdatingOrder(null);
     }
-    console.log(orderId, newStatus);
   };
 
   const getAvailableStatuses = (currentStatus) => {
@@ -177,7 +199,7 @@ export default function StoreOrderManagement() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : orders.length === 0 ? (
+              ) : !orders || orders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-gray-500">
                     No orders found
@@ -313,4 +335,4 @@ export default function StoreOrderManagement() {
       </CardContent>
     </Card>
   );
-} 
+}

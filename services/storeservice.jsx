@@ -299,12 +299,17 @@ export const reportService = {
 
 // Order Service
 export const orderService = {
-  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc', userId = '' } = {}) => {
+  getOrders: async ({ storeId, page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc', userId = '' } = {}) => {
     try {
-      console.log('Fetching orders with params:', { page, limit, sortBy, sortOrder, userId });
+      if (!storeId) {
+        throw new Error('Store ID is required');
+      }
 
-      const response = await api.get('/admin/orders', {
+      console.log('Fetching orders with params:', { storeId, page, limit, sortBy, sortOrder, userId });
+
+      const response = await api.get('/inventory/order/', {
         params: {
+          storeId,
           page,
           limit,
           sortBy,
@@ -329,14 +334,15 @@ export const orderService = {
     }
   },
 
-  updateOrder: async ({ orderId, status }) => {
+  updateOrder: async ({ orderId, storeId, status }) => {
     try {
-      if (!orderId || !status) {
-        throw new Error('Order ID and status are required');
+      if (!orderId || !storeId || !status) {
+        throw new Error('Order ID, Store ID, and status are required');
       }
 
-      const response = await api.put('/admin/update/order', {
+      const response = await api.put('/inventory/order/update', {
         orderId,
+        storeId,
         status
       });
 
