@@ -297,4 +297,82 @@ export const reportService = {
   },
 };
 
+// Order Service
+export const orderService = {
+  getOrders: async (storeId) => {
+    try {
+      console.log('Fetching orders for store:', storeId);
+      
+      if (!storeId) {
+        console.warn('Store ID is missing or not set');
+        throw new Error('Store ID is required for fetching orders');
+      }
+
+      const response = await api.get('/inventory/order/', {
+        params: { 
+          storeId,
+          limit: 100, // Increased limit to get all orders
+          page: 1,
+          sortBy: 'date',
+          sortOrder: 'desc'
+        },
+      });
+
+      console.log('Orders API response:', {
+        totalOrders: response.data?.data?.totalOrders,
+        currentPage: response.data?.data?.currentPage,
+        totalPages: response.data?.data?.totalPages,
+        ordersCount: response.data?.data?.orders?.length
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching orders:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.message.includes('Network Error')) {
+        throw new Error('An error occurred. Please try again later or contact administrator');
+      }
+      throw error;
+    }
+  },
+
+  updateOrder: async ({ orderId, storeId, newStatus }) => {
+    try {
+      console.log('Updating order status:', { orderId, storeId, newStatus });
+
+      if (!orderId || !storeId || !newStatus) {
+        throw new Error('Order ID, Store ID, and new status are required');
+      }
+
+      // Validate status
+      const validStatuses = ['placed', 'confirmed', 'shipped', 'cancelled'];
+      if (!validStatuses.includes(newStatus.toLowerCase())) {
+        throw new Error('Invalid status. Must be one of: placed, confirmed, shipped, cancelled');
+      }
+
+      const response = await api.put('/inventory/order/update', {
+        orderId,
+        storeId,
+        newStatus: newStatus.toLowerCase()
+      });
+
+      console.log('Update order response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating order:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.message.includes('Network Error')) {
+        throw new Error('An error occurred. Please try again later or contact administrator');
+      }
+      throw error;
+    }
+  },
+};
+
 export default api;

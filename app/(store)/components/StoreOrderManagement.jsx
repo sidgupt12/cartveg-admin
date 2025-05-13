@@ -25,65 +25,83 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import React from 'react';
+import { authService } from '@/services/authService';
 
 const statusColors = {
   placed: 'bg-blue-500',
-  shipped: 'bg-yellow-500',
-  delivered: 'bg-green-500',
+  confirmed: 'bg-yellow-500',
+  shipped: 'bg-purple-500',
+  // delivered: 'bg-green-500',
   cancelled: 'bg-red-500',
 };
 
 const statusFlow = {
-  placed: ['shipped', 'cancelled'],
-  shipped: ['delivered', 'cancelled'],
-  delivered: ['cancelled'],
+  placed: ['confirmed', 'shipped', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['cancelled'],
+  // delivered: [],
   cancelled: [],
 };
 
-export default function OrderManagement() {
+export default function StoreOrderManagement() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [userId, setUserId] = useState('');
   const [updatingOrder, setUpdatingOrder] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [storeId, setStoreId] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalOrders: 0
+  });
 
-  const fetchOrders = async () => {
+  useEffect(() => {
+    const fetchStoreId = () => {
+      const id = authService.getStoreId();
+      if (id) {
+        setStoreId(id);
+        fetchOrders(id);
+      } else {
+        toast.error('Store ID not found. Please login again.');
+      }
+    };
+
+    fetchStoreId();
+  }, []);
+
+  const fetchOrders = async (storeId) => {
     try {
       setLoading(true);
-      const response = await orderService.getOrders({
-        page,
-        limit: 10,
-        sortBy: 'date',
-        sortOrder,
-        userId,
+      const response = await orderService.getOrders(storeId);
+      setOrders(response.data.orders);
+      setPagination({
+        currentPage: response.data.currentPage,
+        totalPages: response.data.totalPages,
+        totalOrders: response.data.totalOrders
       });
-      setOrders(response.orders);
-      setTotalPages(response.totalPages);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [page, sortOrder, userId]);
-
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setUpdatingOrder(orderId);
-      await orderService.updateOrder({ orderId, status: newStatus });
+      await orderService.updateOrder({ 
+        orderId, 
+        storeId, 
+        newStatus 
+      });
       toast.success('Order status updated successfully');
-      fetchOrders();
+      fetchOrders(storeId);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to update order status');
     } finally {
       setUpdatingOrder(null);
     }
+    console.log(orderId, newStatus);
   };
 
   const getAvailableStatuses = (currentStatus) => {
@@ -101,8 +119,9 @@ export default function OrderManagement() {
     }
     return (
       <div>
-        <div className="font-medium">{order.userId.name}</div>
-        <div className="text-sm text-gray-500">{order.userId.email}</div>
+        <div className="font-medium">{order.userId.name || 'User'}</div>
+        <div className="text-sm text-gray-500">{order.userId.email || 'No email'}</div>
+        <div className="text-sm text-gray-500">ID: {order.userId}</div>
       </div>
     );
   };
@@ -126,31 +145,12 @@ export default function OrderManagement() {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  const handlePageChange = async (newPage) => {
-    setLoading(true);
-    setPage(newPage);
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Order Management</CardTitle>
-        <div className="flex gap-4 items-center mt-4">
-          <Input
-            placeholder="Filter by User ID"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            className="max-w-xs"
-          />
-          <Select value={sortOrder} onValueChange={setSortOrder}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort order" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="asc">Oldest First</SelectItem>
-              <SelectItem value="desc">Newest First</SelectItem>
-            </SelectContent>
-          </Select>
+        <CardTitle>Store Orders</CardTitle>
+        <div className="text-sm text-gray-500">
+          Total Orders: {pagination.totalOrders} | Page {pagination.currentPage} of {pagination.totalPages}
         </div>
       </CardHeader>
       <CardContent>
@@ -277,36 +277,26 @@ export default function OrderManagement() {
                                 {renderProductInfo(order.products)}
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <h4 className="font-medium mb-2">Store Details</h4>
-                                <div className="text-sm">
-                                  <div>{order.storeId.name}</div>
-                                  <div className="text-gray-500">{order.storeId.email}</div>
-                                  <div className="text-gray-500">{order.storeId.phone}</div>
+                            <div>
+                              <h4 className="font-medium mb-2">Price Breakdown</h4>
+                              <div className="text-sm space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Subtotal:</span>
+                                  <span>₹{order.totalAmount}</span>
                                 </div>
-                              </div>
-                              <div>
-                                <h4 className="font-medium mb-2">Price Breakdown</h4>
-                                <div className="text-sm space-y-1">
-                                  <div className="flex justify-between">
-                                    <span>Subtotal:</span>
-                                    <span>₹{order.totalAmount}</span>
+                                <div className="flex justify-between">
+                                  <span>Shipping:</span>
+                                  <span>₹{order.shippingAmount}</span>
+                                </div>
+                                {order.appliedCoupon && (
+                                  <div className="flex justify-between text-green-500">
+                                    <span>Coupon Discount:</span>
+                                    <span>-₹{order.appliedCoupon.discountAmount}</span>
                                   </div>
-                                  <div className="flex justify-between">
-                                    <span>Shipping:</span>
-                                    <span>₹{order.shippingAmount}</span>
-                                  </div>
-                                  {order.appliedCoupon && (
-                                    <div className="flex justify-between text-green-500">
-                                      <span>Coupon Discount:</span>
-                                      <span>-₹{order.appliedCoupon.discountAmount}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between font-medium">
-                                    <span>Total:</span>
-                                    <span>₹{order.totalAmount + order.shippingAmount - (order.appliedCoupon?.discountAmount || 0)}</span>
-                                  </div>
+                                )}
+                                <div className="flex justify-between font-medium">
+                                  <span>Total:</span>
+                                  <span>₹{order.totalAmount + order.shippingAmount - (order.appliedCoupon?.discountAmount || 0)}</span>
                                 </div>
                               </div>
                             </div>
@@ -319,31 +309,6 @@ export default function OrderManagement() {
               )}
             </TableBody>
           </Table>
-        </div>
-        <div className="flex items-center justify-between mt-4">
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1 || loading}
-          >
-            {loading && page > 1 ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : null}
-            Previous
-          </Button>
-          <span className="text-sm text-gray-500">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page === totalPages || loading}
-          >
-            {loading && page < totalPages ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : null}
-            Next
-          </Button>
         </div>
       </CardContent>
     </Card>

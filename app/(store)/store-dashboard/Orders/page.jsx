@@ -1,13 +1,15 @@
 'use client';
 
 import React from 'react'
-import OrderManagement from '@/components/OrderManagement'
+import StoreOrderManagement from '../../components/StoreOrderManagement';
+
+
 
 function Orders() {
   console.log('Orders page component mounted'); // Debug log
   return (
     <div className="p-6">
-      <OrderManagement />
+      <StoreOrderManagement />
     </div>
   )
 }
