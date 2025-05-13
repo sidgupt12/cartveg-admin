@@ -58,12 +58,18 @@ export default function OrderManagement() {
         limit: 10,
         sortBy: 'date',
         sortOrder,
-        userId,
+        userId
       });
-      setOrders(response.orders);
-      setTotalPages(response.totalPages);
+      
+      if (response && response.data) {
+        setOrders(response.data.orders);
+        setTotalPages(response.data.totalPages);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-      toast.error(error.message);
+      console.error('Error fetching orders:', error);
+      toast.error(error.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
     }
@@ -76,11 +82,15 @@ export default function OrderManagement() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setUpdatingOrder(orderId);
-      await orderService.updateOrder({ orderId, status: newStatus });
+      await orderService.updateOrder({ 
+        orderId, 
+        status: newStatus 
+      });
       toast.success('Order status updated successfully');
       fetchOrders();
     } catch (error) {
-      toast.error(error.message);
+      console.error('Error updating order:', error);
+      toast.error(error.message || 'Failed to update order status');
     } finally {
       setUpdatingOrder(null);
     }

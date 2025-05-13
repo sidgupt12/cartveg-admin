@@ -299,80 +299,58 @@ export const reportService = {
 
 // Order Service
 export const orderService = {
-  getOrders: async (storeId) => {
+  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc', userId = '' } = {}) => {
     try {
-      console.log('Fetching orders for store:', storeId);
-      
-      if (!storeId) {
-        console.warn('Store ID is missing or not set');
-        throw new Error('Store ID is required for fetching orders');
+      console.log('Fetching orders with params:', { page, limit, sortBy, sortOrder, userId });
+
+      const response = await api.get('/admin/orders', {
+        params: {
+          page,
+          limit,
+          sortBy,
+          sortOrder,
+          userId: userId || undefined
+        }
+      });
+
+      if (!response.data) {
+        throw new Error('Invalid response from server');
       }
 
-      const response = await api.get('/inventory/order/', {
-        params: { 
-          storeId,
-          limit: 100, // Increased limit to get all orders
-          page: 1,
-          sortBy: 'date',
-          sortOrder: 'desc'
-        },
-      });
-
-      console.log('Orders API response:', {
-        totalOrders: response.data?.data?.totalOrders,
-        currentPage: response.data?.data?.currentPage,
-        totalPages: response.data?.data?.totalPages,
-        ordersCount: response.data?.data?.orders?.length
-      });
-
-      return response.data;
+      return response;
     } catch (error) {
-      console.error('Error fetching orders:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      if (error.message.includes('Network Error')) {
-        throw new Error('An error occurred. Please try again later or contact administrator');
+      console.error('Error in getOrders:', error);
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid request parameters');
+      } else if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Please login again');
       }
       throw error;
     }
   },
 
-  updateOrder: async ({ orderId, storeId, newStatus }) => {
+  updateOrder: async ({ orderId, status }) => {
     try {
-      console.log('Updating order status:', { orderId, storeId, newStatus });
-
-      if (!orderId || !storeId || !newStatus) {
-        throw new Error('Order ID, Store ID, and new status are required');
+      if (!orderId || !status) {
+        throw new Error('Order ID and status are required');
       }
 
-      // Validate status
-      const validStatuses = ['placed', 'confirmed', 'shipped', 'cancelled'];
-      if (!validStatuses.includes(newStatus.toLowerCase())) {
-        throw new Error('Invalid status. Must be one of: placed, confirmed, shipped, cancelled');
-      }
-
-      const response = await api.put('/inventory/order/update', {
+      const response = await api.put('/admin/update/order', {
         orderId,
-        storeId,
-        newStatus: newStatus.toLowerCase()
+        status
       });
 
-      console.log('Update order response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error updating order:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      if (error.message.includes('Network Error')) {
-        throw new Error('An error occurred. Please try again later or contact administrator');
+      console.error('Error in updateOrder:', error);
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid order data');
+      } else if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Please login again');
       }
       throw error;
     }
-  },
+  }
 };
 
 export default api;
