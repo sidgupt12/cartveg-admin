@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { orderService } from '@/services/storeservice';
+
 import { toast } from 'sonner';
 import {
   Table,
@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import React from 'react';
+import { orderService } from '@/services/superservice';
 
 const statusColors = {
   placed: 'bg-blue-500',
@@ -61,9 +62,10 @@ export default function OrderManagement() {
         userId
       });
       
-      if (response && response.data) {
-        setOrders(response.data.orders);
-        setTotalPages(response.data.totalPages);
+      if (response) {
+        setOrders(response.orders || []);
+        setTotalPages(response.totalPages || 1);
+        setPage(response.currentPage || 1);
       } else {
         throw new Error('Invalid response format');
       }
