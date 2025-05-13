@@ -115,16 +115,18 @@ export const userService = {
         throw new Error('Phone number must be 10 digits');
       }
   
-      // Prepare payload, excluding addresses
+      // Prepare payload
       const payload = {
-        name: data.name,
-        phone: data.phone,
-        isActivate: data.isActivate,
+        id,
+        data: {
+          name: data.name,
+          phone: data.phone,
+        }
       };
   
-      console.log('Updating user with data:', { id, data: payload });
+      console.log('Updating user with data:', payload);
   
-      const response = await superApi.put(`/admin/user/update/${id}`, payload);
+      const response = await superApi.put('/admin/user/update', payload);
   
       console.log('Update user API response:', response.data);
       return response.data;

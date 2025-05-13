@@ -16,7 +16,6 @@ const UserManagement = () => {
     name: '',
     email: '',
     phone: '',
-    isActivate: true,
   });
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState({});
@@ -137,7 +136,6 @@ const UserManagement = () => {
         data: {
           name: formData.name,
           phone: formData.phone,
-          isActivate: formData.isActivate,
         },
       });
       setIsUpdatePopupOpen(false);
@@ -145,7 +143,6 @@ const UserManagement = () => {
         name: '',
         email: '',
         phone: '',
-        isActivate: true,
       });
       fetchUsers(currentPage);
     } catch (err) {
@@ -168,7 +165,6 @@ const UserManagement = () => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      isActivate: user.isActivate ?? true,
     });
     setIsUpdatePopupOpen(true);
   };
@@ -327,19 +323,6 @@ const UserManagement = () => {
                         <p>{user.fcmTokens.length > 0 ? user.fcmTokens.join(', ') : 'None'}</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <User className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="font-medium">Active</p>
-                        <p>
-                          {user.isActivate ? (
-                            <span className="text-green-600 font-medium">Yes</span>
-                          ) : (
-                            <span className="text-red-600 font-medium">No</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                   <div className="mt-4">
                     <p className="font-medium text-gray-900">Addresses</p>
@@ -470,17 +453,6 @@ const UserManagement = () => {
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full p-2.5 mb-2 border border-gray-200 rounded-lg bg-white/90 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm transition-all"
                 />
-                <label className="flex items-center mb-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActivate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isActivate: e.target.checked })
-                    }
-                    className="mr-2 accent-green-600"
-                  />
-                  Active
-                </label>
                 <div className="flex justify-end gap-3 mt-4">
                   <button
                     type="button"
