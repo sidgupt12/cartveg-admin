@@ -1,10 +1,13 @@
-import { SidebarTrigger } from '@/components/ui/sidebar'
+'use client';
+
 import React from 'react'
+import OrderManagement from '@/components/OrderManagement'
 
 function Orders() {
+  console.log('Orders page component mounted'); // Debug log
   return (
-    <div>
-        Orders
+    <div className="p-6">
+      <OrderManagement />
     </div>
   )
 }

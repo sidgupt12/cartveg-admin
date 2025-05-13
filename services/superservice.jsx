@@ -890,4 +890,109 @@ export const analysisService = {
   },
 };
 
+export const orderService = {
+  getOrders: async ({ page = 1, limit = 10, sortBy = 'date', sortOrder = 'desc', userId = '' } = {}) => {
+    try {
+      // Validate parameters
+      if (page < 1) {
+        throw new Error('Page number must be greater than 0');
+      }
+      if (limit < 1) {
+        throw new Error('Limit must be greater than 0');
+      }
+      if (!['date', 'totalAmount', 'status'].includes(sortBy)) {
+        throw new Error('Invalid sortBy parameter. Must be one of: date, totalAmount, status');
+      }
+      if (!['asc', 'desc'].includes(sortOrder)) {
+        throw new Error('Invalid sortOrder parameter. Must be either asc or desc');
+      }
+
+      console.log('Fetching orders with params:', { page, limit, sortBy, sortOrder, userId });
+
+      const response = await superApi.get('/admin/orders', {
+        params: {
+          page,
+          limit,
+          sortBy,
+          sortOrder,
+          userId: userId || undefined, // Only include userId if it's not empty
+        },
+      });
+
+      console.log('Get orders API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching orders:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid request parameters');
+      }
+
+      throw error;
+    }
+  },
+
+  updateOrder: async ({ orderId, status }) => {
+    try {
+      // Validate required fields
+      if (!orderId) {
+        throw new Error('Order ID is required');
+      }
+      if (!status) {
+        throw new Error('Status is required');
+      }
+
+      // Validate status
+      const validStatuses = ['placed', 'shipped', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+      }
+
+      // Get current order to validate status transition
+      const currentOrder = await superApi.get(`/admin/orders/${orderId}`);
+      const currentStatus = currentOrder.data.orders[0].status;
+      
+      // Validate status transition
+      const statusIndex = validStatuses.indexOf(status);
+      const currentStatusIndex = validStatuses.indexOf(currentStatus);
+      
+      if (statusIndex < currentStatusIndex) {
+        throw new Error(`Cannot change status from ${currentStatus} to ${status}. Status can only be updated forward.`);
+      }
+
+      console.log('Updating order status:', { orderId, status });
+
+      const response = await superApi.put('/admin/update/order', {
+        orderId,
+        status,
+      });
+
+      console.log('Update order API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating order:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid order data provided');
+      } else if (error.response?.status === 404) {
+        throw new Error('Order not found');
+      }
+
+      throw error;
+    }
+  },
+};
+
 export default superApi;

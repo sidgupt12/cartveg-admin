@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BadgeDollarSign, Bell, Home, Package, Store, Ticket, Users2 } from "lucide-react"
+import { BadgeDollarSign, Bell, Home, ListOrderedIcon, Package, Store, Ticket, Users2 } from "lucide-react"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
          SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 
@@ -46,6 +46,11 @@ const items = [
     title: "Notification",
     url: "/admin-dashboard/Notification",
     icon: Bell,
+  },
+  {
+    title: "Orders",
+    url: "/admin-dashboard/Orders",
+    icon: ListOrderedIcon,
   },
 ]
 
