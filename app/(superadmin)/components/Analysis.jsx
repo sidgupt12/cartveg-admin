@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users, Calendar, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { analysisService } from '@/services/superservice';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Label } from 'recharts';
@@ -310,7 +310,42 @@ export const Analysis = () => {
           </Card>
         </div>
       ) : (
-        <div className="text-center text-muted-foreground">Select date range to view analysis</div>
+        <div className="grid gap-6">
+          <Card className="border-2 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <div className="rounded-full bg-green-100 p-3 mb-4">
+                <Calendar className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Select Date Range</h3>
+              <p className="text-gray-500 text-center max-w-md mb-6">
+                Choose a start and end date to view detailed analysis of your store's performance, including orders, revenue, and user statistics.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <ShoppingCart className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium">Order Analysis</p>
+                    <p className="text-sm text-gray-500">Total orders and revenue</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <Users className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium">User Insights</p>
+                    <p className="text-sm text-gray-500">Active users and trends</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium">Store Performance</p>
+                    <p className="text-sm text-gray-500">Store-wise analytics</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
