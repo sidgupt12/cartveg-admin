@@ -121,7 +121,7 @@ export default function StoreOrderManagement() {
       <div>
         <div className="font-medium">{order.userId.name || 'User'}</div>
         <div className="text-sm text-gray-500">{order.userId.email || 'No email'}</div>
-        <div className="text-sm text-gray-500">ID: {order.userId}</div>
+        <div className="text-sm text-gray-500">{order.userId.phone || 'No phone'}</div>
       </div>
     );
   };
