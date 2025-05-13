@@ -809,5 +809,85 @@ export const productService = {
   },
 };
 
+// Notification Service
+export const notificationService = {
+  sendNotification: async ({ title, body }) => {
+    try {
+      // Validate required fields
+      if (!title || typeof title !== 'string') {
+        throw new Error('Title is required and must be a string');
+      }
+      if (!body || typeof body !== 'string') {
+        throw new Error('Body is required and must be a string');
+      }
+
+      console.log('Sending notification with data:', { title, body });
+
+      const response = await superApi.post('/admin/send-notification', {
+        title,
+        body,
+      });
+
+      console.log('Send notification API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending notification:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid notification data provided');
+      }
+
+      throw error;
+    }
+  },
+};
+
+export const analysisService = {
+  getAnalysis: async ({ startDate, endDate }) => {
+    try {
+      // Validate required fields
+      if (!startDate || !endDate) {
+        throw new Error('Start date and end date are required');
+      }
+
+
+      // Validate date range
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (start > end) {
+        throw new Error('Start date must be before end date');
+      }
+
+      console.log('Fetching analysis with params:', { startDate, endDate });
+
+      const response = await superApi.get('/admin/analysis', {
+        params: { startDate, endDate },
+      });
+
+      console.log('Get analysis API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching analysis:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid date range provided');
+      }
+
+      throw error;
+    }
+  },
+};
 
 export default superApi;

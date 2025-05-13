@@ -74,47 +74,44 @@ export const authService = {
           const { success, data, message } = responseData;
           
           if (success && data?.token) {
-            // Store token in cookies
-            Cookies.set('token', data.token, {
+            // Store token in cookies with development-friendly settings
+            const cookieOptions = {
               expires: new Date(data.tokenValidTill),
-              secure: true,
-              sameSite: 'Strict',
-            });
+              // Only use secure in production
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'Lax', // More permissive than 'Strict'
+            };
+
+            // Store token in cookies
+            Cookies.set('token', data.token, cookieOptions);
             
             // Store expiry date
-            Cookies.set('token_expiry', data.tokenValidTill, {
-              expires: new Date(data.tokenValidTill),
-              secure: true,
-              sameSite: 'Strict',
-            });
+            Cookies.set('token_expiry', data.tokenValidTill, cookieOptions);
             
             // Store user role
-            Cookies.set('userRole', data.user.role, {
-              expires: new Date(data.tokenValidTill),
-              secure: true,
-              sameSite: 'Strict',
-            });
+            Cookies.set('userRole', data.user.role, cookieOptions);
             
             // Store user data
-            Cookies.set('userData', JSON.stringify(data.user), {
-              expires: new Date(data.tokenValidTill),
-              secure: true,
-              sameSite: 'Strict',
-            });
+            Cookies.set('userData', JSON.stringify(data.user), cookieOptions);
             
-            // If user is a store manager and store data exists, store it
-            if (data.user.role === 'storemanager' || data.user.role === 'storeadmin' && data.store) {
-              Cookies.set('storeId', data.store._id, {
-                expires: new Date(data.tokenValidTill),
-                secure: true,
-                sameSite: 'Strict',
-              });
+            // Handle store ID for both storemanager and storeadmin roles
+            if (data.user.role === 'storemanager' || data.user.role === 'storeadmin') {
+              // Try to get store ID from either data.store or user.storeId
+              const storeId = data.store?._id || data.user.storeId;
               
-              Cookies.set('storeData', JSON.stringify(data.store), {
-                expires: new Date(data.tokenValidTill),
-                secure: true,
-                sameSite: 'Strict',
-              });
+              if (storeId) {
+                console.log('Setting store cookies for role:', data.user.role);
+                console.log('Store ID:', storeId);
+                
+                Cookies.set('storeId', storeId, cookieOptions);
+                
+                // If we have full store data, store that too
+                if (data.store) {
+                  Cookies.set('storeData', JSON.stringify(data.store), cookieOptions);
+                }
+              } else {
+                console.warn('No store ID found for user:', data.user);
+              }
             }
             
             // Define the role redirect map here before using it

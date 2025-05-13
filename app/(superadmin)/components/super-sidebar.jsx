@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Ticket, Users2 } from "lucide-react"
+import { BadgeDollarSign, Bell, Home, Package, Store, Ticket, Users2 } from "lucide-react"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
          SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 
@@ -20,7 +20,7 @@ const items = [
   {
     title: "Store Service",
     url: "/admin-dashboard/Store-Management",
-    icon: Home,
+    icon: Store,
   },
   {
     title: "Coupon Management",
@@ -35,12 +35,17 @@ const items = [
   {
     title: "Cashback",
     url: "/admin-dashboard/Cashback",
-    icon: Home,
+    icon: BadgeDollarSign,
   },
   {
     title: "Products",
     url: "/admin-dashboard/Products",
-    icon: Home,
+    icon: Package,
+  },
+  {
+    title: "Notification",
+    url: "/admin-dashboard/Notification",
+    icon: Bell,
   },
 ]
 

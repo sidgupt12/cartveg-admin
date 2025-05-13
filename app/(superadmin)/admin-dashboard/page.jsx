@@ -1,9 +1,15 @@
-import React from 'react'
+'use client';
+import React from 'react';
+import { Analysis } from '../components/Analysis';
 
-function adminDashboard() {
+
+function AdminDashboard() {
   return (
-    <div>adminDashboard</div>
-  )
+    <div>
+      <h1>Admin Dashboard</h1>
+      <Analysis/>
+    </div>
+  );
 }
 
-export default adminDashboard
+export default AdminDashboard;

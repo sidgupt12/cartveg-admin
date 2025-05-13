@@ -262,7 +262,8 @@ export const reportService = {
     }
   },
 
-  getDailyReport: async (storeId, date) => {
+  getDailyReport: 
+  async (storeId, date) => {
     try {
       console.log('Fetching daily report with params:', { storeId, date });
       

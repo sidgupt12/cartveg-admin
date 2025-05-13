@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateInput } from "@/components/ui/date-input";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Upload } from "lucide-react";
 import { format } from "date-fns";
@@ -43,6 +42,14 @@ export default function Report() {
       setLoading(true);
       setError(null);
       const storeId = Cookies.get('storeId');
+      const userRole = Cookies.get('userRole');
+      const userData = Cookies.get('userData');
+      
+      console.log('Debug - Cookies:', {
+        storeId,
+        userRole,
+        userData: userData ? JSON.parse(userData) : null
+      });
       
       if (!storeId) {
         throw new Error('Store ID not found. Please ensure you are logged in.');
@@ -153,28 +160,10 @@ export default function Report() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="date">Report Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !uploadDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {uploadDate ? format(uploadDate, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={uploadDate}
-                        onSelect={setUploadDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <DateInput
+                    value={uploadDate}
+                    onChange={setUploadDate}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="file">CSV File</Label>
@@ -208,28 +197,11 @@ export default function Report() {
               </div>
             </DialogContent>
           </Dialog>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[240px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <DateInput
+            value={date}
+            onChange={setDate}
+            className="w-[240px]"
+          />
         </div>
       </div>
 
