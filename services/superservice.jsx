@@ -1009,6 +1009,40 @@ export const orderService = {
     }
   },
 
+  searchOrder: async ({ orderId }) => {
+    try {
+      // Validate required fields
+      if (!orderId) {
+        throw new Error('Order ID is required');
+      }
+
+      console.log('Searching order with ID:', orderId);
+
+      const response = await superApi.get(`/admin/orders/id`, {
+        params: { orderId },
+      });
+
+      console.log('Search order API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error searching order:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid order ID provided');
+      } else if (error.response?.status === 404) {
+        throw new Error('Order not found');
+      }
+
+      throw error;
+    }
+  },
+
   updateOrder: async ({ orderId, status }) => {
     try {
       // Validate required fields

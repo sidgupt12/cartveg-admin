@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { userService } from '@/services/superservice';
-import { Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Clock, Mail, Phone, MapPin, Package, User, CreditCard, ExternalLink } from 'lucide-react';
+import { orderService } from '@/services/superservice';
+import { Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Clock, Mail, Phone, MapPin, Package, User, CreditCard, ExternalLink, ShoppingBag, Calendar, Store, Truck, CreditCard as CreditCardIcon, Receipt } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,9 @@ const UserManagement = () => {
   const updatePopupRef = useRef(null);
   const router = useRouter();
   const limit = 15;
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
+  const [orderDetailsLoading, setOrderDetailsLoading] = useState({});
 
   // Handle outside click to close popups
   useEffect(() => {
@@ -199,10 +203,44 @@ const UserManagement = () => {
     }
   };
 
-  // Add this new function
-  const handleViewAllOrders = (orders) => {
+  // Update the handleViewAllOrders function
+  const handleViewAllOrders = async (orders) => {
     setSelectedUserOrders(orders);
     setIsOrdersDialogOpen(true);
+  };
+
+  // Update the handleViewOrderDetails function
+  const handleViewOrderDetails = async (orderId, e) => {
+    e.stopPropagation();
+    setOrderDetailsLoading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const response = await orderService.searchOrder({ orderId });
+      setSelectedOrderDetails(response.order);
+      setIsOrderDetailsDialogOpen(true);
+    } catch (error) {
+      toast.error('Failed to fetch order details', {
+        description: error.message,
+      });
+    } finally {
+      setOrderDetailsLoading(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  // Update the handleOrderClickInDialog function
+  const handleOrderClickInDialog = async (orderId) => {
+    setOrderDetailsLoading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const response = await orderService.searchOrder({ orderId });
+      setSelectedOrderDetails(response.order);
+      setIsOrderDetailsDialogOpen(true);
+      setIsOrdersDialogOpen(false);
+    } catch (error) {
+      toast.error('Failed to fetch order details', {
+        description: error.message,
+      });
+    } finally {
+      setOrderDetailsLoading(prev => ({ ...prev, [orderId]: false }));
+    }
   };
 
   // Add this new function for handling credit addition
@@ -400,11 +438,17 @@ const UserManagement = () => {
                             {user.orders && user.orders.length > 0 ? (
                               <div className="space-y-2">
                                 {user.orders.slice(0, 3).map((order, index) => (
-                                  <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded-lg">
+                                  <div 
+                                    key={index} 
+                                    className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={(e) => handleViewOrderDetails(order, e)}
+                                  >
                                     <span className="text-gray-600 truncate">Order #{order}</span>
-                                    <Button variant="ghost" size="sm" className="h-6 px-2 shrink-0">
-                                      <ExternalLink className="h-3 w-3" />
-                                    </Button>
+                                    {orderDetailsLoading[order] ? (
+                                      <div className="w-3 h-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                      <ExternalLink className="h-3 w-3 text-gray-400" />
+                                    )}
                                   </div>
                                 ))}
                                 {user.orders.length > 3 && (
@@ -594,14 +638,17 @@ const UserManagement = () => {
                 {selectedUserOrders.map((order, index) => (
                   <div 
                     key={index} 
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => handleOrderClickInDialog(order)}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-gray-900">Order #{order}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
+                    {orderDetailsLoading[order] ? (
+                      <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <ExternalLink className="h-4 w-4 text-gray-400" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -659,6 +706,189 @@ const UserManagement = () => {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Order Details Dialog */}
+        <Dialog open={isOrderDetailsDialogOpen} onOpenChange={setIsOrderDetailsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Details</DialogTitle>
+            </DialogHeader>
+            {selectedOrderDetails && (
+              <div className="space-y-6">
+                {/* Order Header */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{selectedOrderDetails.orderId}</h3>
+                    <p className="text-sm text-gray-500">Invoice: {selectedOrderDetails.invoiceId}</p>
+                  </div>
+                  <Badge 
+                    variant={selectedOrderDetails.status === 'delivered' ? 'success' : 'default'}
+                    className="bg-green-100 text-green-800 hover:bg-green-100"
+                  >
+                    {selectedOrderDetails.status.toUpperCase()}
+                  </Badge>
+                </div>
+
+                {/* Order Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Order Details */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Order Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">Order Date</p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(selectedOrderDetails.orderDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">Expected Delivery</p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(selectedOrderDetails.expectedDeliveryDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CreditCardIcon className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">Payment Status</p>
+                          <p className="text-sm text-gray-500 capitalize">{selectedOrderDetails.paymentStatus}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">Total Items</p>
+                          <p className="text-sm text-gray-500">{selectedOrderDetails.totalItems}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Store Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Store Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Store className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium">{selectedOrderDetails.storeId.name}</p>
+                          <p className="text-sm text-gray-500">{selectedOrderDetails.storeId.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm text-gray-500">{selectedOrderDetails.storeId.phone}</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            {selectedOrderDetails.storeId.address.flatno}, {selectedOrderDetails.storeId.address.street}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {selectedOrderDetails.storeId.address.city}, {selectedOrderDetails.storeId.address.state} - {selectedOrderDetails.storeId.address.pincode}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Delivery Address */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Delivery Address</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            {selectedOrderDetails.deliveryAddress.flatno}, {selectedOrderDetails.deliveryAddress.street}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {selectedOrderDetails.deliveryAddress.city}, {selectedOrderDetails.deliveryAddress.state} - {selectedOrderDetails.deliveryAddress.pincode}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Payment Details */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Payment Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Subtotal</span>
+                        <span className="text-sm font-medium">₹{selectedOrderDetails.totalAmount - selectedOrderDetails.shippingAmount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Shipping</span>
+                        <span className="text-sm font-medium">₹{selectedOrderDetails.shippingAmount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Wallet Used</span>
+                        <span className="text-sm font-medium">₹{selectedOrderDetails.wallet_amount_used}</span>
+                      </div>
+                      <div className="border-t pt-2 flex justify-between">
+                        <span className="text-sm font-medium">Total</span>
+                        <span className="text-sm font-medium">₹{selectedOrderDetails.totalAmount}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Products List */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Products</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {selectedOrderDetails.products.map((product, index) => (
+                        <div key={index} className="flex items-center gap-4 p-2 bg-gray-50 rounded-lg">
+                          {product.productId ? (
+                            <>
+                              <img
+                                src={product.productId.image}
+                                alt={product.productId.name}
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium">{product.productId.name}</h4>
+                                <p className="text-sm text-gray-500">{product.productId.category}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">₹{product.productId.price}</p>
+                                <p className="text-sm text-gray-500">Qty: {product.quantity}</p>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-500">Product no longer available</p>
+                              <p className="text-sm text-gray-500">Quantity: {product.quantity}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
