@@ -245,34 +245,38 @@ const UserManagement = () => {
         {/* User List */}
         <div className="grid gap-6">
           {filteredUsers.map((user) => (
-            <Card key={user._id} className="overflow-hidden">
+            <Card 
+              key={user._id} 
+              className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setExpandedUser(expandedUser === user._id ? null : user._id)}
+            >
               <CardContent className="p-0">
                 <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-semibold text-gray-900">{user.name}</h2>
-                        <Badge variant="outline" className="text-xs">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">{user.name}</h2>
+                        <Badge variant="outline" className="text-xs shrink-0">
                           {user.orders?.length || 0} Orders
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                         <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4" />
-                          {user.email}
+                          <Mail className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{user.email}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4" />
-                          {user.phone}
+                          <Phone className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{user.phone}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          // Credit functionality will be added later
+                        onClick={(e) => {
+                          e.stopPropagation();
                           toast.info("Credit functionality coming soon!");
                         }}
                         className="text-green-600 hover:text-green-700"
@@ -314,7 +318,10 @@ const UserManagement = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setExpandedUser(expandedUser === user._id ? null : user._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedUser(expandedUser === user._id ? null : user._id);
+                        }}
                       >
                         {expandedUser === user._id ? (
                           <ChevronUp className="h-5 w-5 text-gray-600" />
@@ -327,17 +334,17 @@ const UserManagement = () => {
 
                   {expandedUser === user._id && (
                     <div className="mt-6 border-t border-gray-100 pt-6 animate-slide-down">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="space-y-4">
                           <div>
                             <h3 className="text-sm font-medium text-gray-500 mb-2">User Details</h3>
                             <div className="space-y-2">
                               <div className="flex items-center gap-2 text-sm">
-                                <User className="h-4 w-4 text-gray-400" />
-                                <span className="text-gray-600">ID: {user._id}</span>
+                                <User className="h-4 w-4 text-gray-400 shrink-0" />
+                                <span className="text-gray-600 break-all">ID: {user._id}</span>
                               </div>
                               <div className="flex items-center gap-2 text-sm">
-                                <Clock className="h-4 w-4 text-gray-400" />
+                                <Clock className="h-4 w-4 text-gray-400 shrink-0" />
                                 <span className="text-gray-600">Joined: {formatDate(user.createdAt)}</span>
                               </div>
                             </div>
@@ -351,8 +358,8 @@ const UserManagement = () => {
                               <div className="space-y-2">
                                 {user.orders.slice(0, 3).map((order, index) => (
                                   <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded-lg">
-                                    <span className="text-gray-600">Order #{order}</span>
-                                    <Button variant="ghost" size="sm" className="h-6 px-2">
+                                    <span className="text-gray-600 truncate">Order #{order}</span>
+                                    <Button variant="ghost" size="sm" className="h-6 px-2 shrink-0">
                                       <ExternalLink className="h-3 w-3" />
                                     </Button>
                                   </div>
@@ -361,7 +368,10 @@ const UserManagement = () => {
                                   <Button 
                                     variant="link" 
                                     className="text-sm text-green-600"
-                                    onClick={() => handleViewAllOrders(user.orders)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewAllOrders(user.orders);
+                                    }}
                                   >
                                     View all {user.orders.length} orders
                                   </Button>
@@ -380,8 +390,8 @@ const UserManagement = () => {
                               <div className="space-y-2">
                                 {user.addresses.map((addr, index) => (
                                   <div key={index} className="text-sm bg-gray-50 p-2 rounded-lg">
-                                    <p className="text-gray-600">{addr.flatno}, {addr.street}</p>
-                                    <p className="text-gray-500 text-xs">{addr.city}, {addr.state} - {addr.pincode}</p>
+                                    <p className="text-gray-600 break-words">{addr.flatno}, {addr.street}</p>
+                                    <p className="text-gray-500 text-xs break-words">{addr.city}, {addr.state} - {addr.pincode}</p>
                                   </div>
                                 ))}
                               </div>
