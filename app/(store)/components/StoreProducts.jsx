@@ -93,21 +93,6 @@ export default function StoreProducts() {
   const [updateError, setUpdateError] = useState(null);
   const [updateSuccess, setUpdateSuccess] = useState(null);
 
-  // Helper function to safely get current page from localStorage
-  const getCurrentPage = () => {
-    if (typeof window !== 'undefined') {
-      return parseInt(localStorage.getItem('currentPage')) || 1;
-    }
-    return 1;
-  };
-
-  // Helper function to safely set current page in localStorage
-  const setCurrentPage = (page) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('currentPage', page.toString());
-    }
-  };
-
   const fetchProducts = async (page = 1, query = '') => {
     try {
       if (!authService.checkTokenValidity()) {
@@ -175,7 +160,6 @@ export default function StoreProducts() {
 
         setProducts(productsData);
         setPagination(paginationData);
-        setCurrentPage(page);
       } else {
         throw new Error(response?.message || 'Failed to fetch products: Invalid API response structure');
       }
@@ -237,18 +221,15 @@ export default function StoreProducts() {
 
   useEffect(() => {
     console.log('StoreProducts component mounted');
-    const savedPage = getCurrentPage();
-    fetchProducts(savedPage);
+    fetchProducts(1);
   }, []);
 
   const handleSearch = () => {
-    setCurrentPage(1); // Reset to page 1 when searching
     fetchProducts(1);
   };
 
   const clearSearch = () => {
     setSearchTerm('');
-    setCurrentPage(1); // Reset to page 1 when clearing search
     fetchProducts(1);
   };
 
@@ -268,7 +249,6 @@ export default function StoreProducts() {
 
   const handleFilterSubmit = () => {
     setIsFilterOpen(false);
-    setCurrentPage(1); // Reset to page 1 when applying filters
     fetchProducts(1);
   };
 

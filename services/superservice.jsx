@@ -474,12 +474,28 @@ export const storeService = {
 
 // Coupon Service
 export const couponService = {
-  createCoupon: async ({ code, expiry, minValue, maxUsage, offValue }) => {
+  createCoupon: async ({ code, expiry, minValue, maxUsage, offValue, couponType, minOrders }) => {
     try {
-      console.log('Creating coupon with body:', { code, expiry, minValue, maxUsage, offValue });
-      
+      // Validate common required fields
+      if (!code || !expiry || !minValue || !maxUsage || !offValue || !couponType) {
+        throw new Error('All basic fields (code, expiry, minValue, maxUsage, offValue, couponType) are required');
+      }
+
+      // Validate coupon type specific fields
+      if (couponType === 'MinOrders' && !minOrders) {
+        throw new Error('minOrders is required for MinOrders type coupons');
+      }
+
       // Build the request body
-      const body = { code, expiry, minValue, maxUsage, offValue };
+      const body = {
+        code,
+        expiry,
+        minValue,
+        maxUsage,
+        offValue,
+        couponType,
+        ...(couponType === 'MinOrders' && { minOrders })
+      };
   
       const response = await superApi.post('/admin/coupon/create', body);
       console.log('Create coupon API response:', response.data);
@@ -532,17 +548,28 @@ export const couponService = {
     }
   },
 
-  updateCoupon: async ({ id, code, expiry, minValue, maxUsage, offValue }) => {
+  updateCoupon: async ({ id, code, expiry, minValue, maxUsage, offValue, couponType, minOrders }) => {
     try {
-      console.log('Updating coupon with params:', { id, code, expiry, minValue, maxUsage, offValue });
+      // Validate common required fields
+      if (!code || !expiry || !minValue || !maxUsage || !offValue || !couponType) {
+        throw new Error('All basic fields (code, expiry, minValue, maxUsage, offValue, couponType) are required');
+      }
+
+      // Validate coupon type specific fields
+      if (couponType === 'MinOrders' && !minOrders) {
+        throw new Error('minOrders is required for MinOrders type coupons');
+      }
       
       // Build the request body with only provided fields
-      const body = {};
-      if (code !== undefined) body.code = code;
-      if (expiry !== undefined) body.expiry = expiry;
-      if (minValue !== undefined) body.minValue = minValue;
-      if (maxUsage !== undefined) body.maxUsage = maxUsage;
-      if (offValue !== undefined) body.offValue = offValue;
+      const body = {
+        code,
+        expiry,
+        minValue,
+        maxUsage,
+        offValue,
+        couponType,
+        ...(couponType === 'MinOrders' && { minOrders })
+      };
   
       const response = await superApi.put('/admin/coupon/update', body, {
         params: { id },

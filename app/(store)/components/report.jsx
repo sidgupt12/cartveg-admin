@@ -270,6 +270,57 @@ export default function Report() {
             </Card>
           </div>
 
+          {/* Additional Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Cash on Delivery</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">₹{report.cash_on_delivery_amount}</div>
+                <p className="text-xs text-muted-foreground">COD payments</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Online Payments</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">₹{report.online_payment_amount}</div>
+                <p className="text-xs text-muted-foreground">Digital payments</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Most Selling Product</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{report.most_selling_quantity}</div>
+                <p className="text-xs text-muted-foreground">
+                  {report.most_selling_product_id ? `Product ID: ${report.most_selling_product_id}` : 'No data'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Costs</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ₹{report.total_purchase_cost + report.total_fixed_cost + report.labour_cost + report.packaging_cost}
+                </div>
+                <p className="text-xs text-muted-foreground">All costs combined</p>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -312,6 +363,50 @@ export default function Report() {
 
             <Card>
               <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Cash on Delivery', value: report.cash_on_delivery_amount },
+                          { name: 'Online Payment', value: report.online_payment_amount }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        paddingAngle={5}
+                      >
+                        {[
+                          { name: 'Cash on Delivery', value: report.cash_on_delivery_amount },
+                          { name: 'Online Payment', value: report.online_payment_amount }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                        formatter={(value, entry) => (
+                          <span className="text-sm">
+                            {value} - ₹{entry.payload.value}
+                          </span>
+                        )}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+              <CardHeader>
                 <CardTitle>Sales vs Costs</CardTitle>
               </CardHeader>
               <CardContent>
@@ -320,7 +415,7 @@ export default function Report() {
                     <BarChart data={profitData}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                       <Legend />
                       <Bar dataKey="value" fill="#8884d8" />
                     </BarChart>

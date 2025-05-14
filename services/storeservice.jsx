@@ -334,16 +334,16 @@ export const orderService = {
     }
   },
 
-  updateOrder: async ({ orderId, storeId, status }) => {
+  updateOrder: async ({ orderId, storeId, newStatus }) => {
     try {
-      if (!orderId || !storeId || !status) {
-        throw new Error('Order ID, Store ID, and status are required');
+      if (!orderId || !storeId || !newStatus) {
+        throw new Error('Order ID, Store ID, and newStatus are required');
       }
 
       const response = await api.put('/inventory/order/update', {
         orderId,
         storeId,
-        status
+        newStatus
       });
 
       return response.data;

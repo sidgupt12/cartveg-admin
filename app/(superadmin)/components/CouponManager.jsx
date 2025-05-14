@@ -2,6 +2,18 @@
 'use client';
 import { couponService } from '@/services/superservice';
 import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Package, Percent } from "lucide-react";
 
 const CouponManager = () => {
   const [coupons, setCoupons] = useState([]);
@@ -42,169 +54,225 @@ const CouponManager = () => {
       minValue: initialData.minValue || '',
       maxUsage: initialData.maxUsage || '',
       offValue: initialData.offValue || '',
+      couponType: initialData.couponType || 'MaxUsage',
+      minOrders: initialData.minOrders || '',
     });
-    const [formError, setFormError] = useState(null); // Form-specific error state
-    const [formLoading, setFormLoading] = useState(false); // Form-specific loading state
+    const [formError, setFormError] = useState(null);
+    const [formLoading, setFormLoading] = useState(false);
 
-
-    const handleChange = (e) => {
-      const { name, value } = e.target;
+    const handleChange = (name, value) => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setFormLoading(true);
-        setFormError(null);
-        try {
-          const data = {
-            code: formData.code,  // Changed from couponCode to code
-            expiry: formData.expiry,
-            minValue: parseFloat(formData.minValue) || 0,
-            maxUsage: parseInt(formData.maxUsage) || 1,
-            offValue: parseFloat(formData.offValue) || 0,
-          };
-          
-          if (isUpdate) {
-            data.id = initialData._id;
-            await couponService.updateCoupon(data);
-          } else {
-            await couponService.createCoupon(data);
-          }
-          await fetchCoupons();
-          onSubmit();
-        } catch (err) {
-          // Error handling remains the same
-        } finally {
-          setFormLoading(false);
+      e.preventDefault();
+      setFormLoading(true);
+      setFormError(null);
+      try {
+        const data = {
+          code: formData.code,
+          expiry: new Date(formData.expiry).toISOString(),
+          minValue: parseFloat(formData.minValue) || 0,
+          maxUsage: parseInt(formData.maxUsage) || 1,
+          offValue: parseFloat(formData.offValue) || 0,
+          couponType: formData.couponType,
+          ...(formData.couponType === 'MinOrders' && { minOrders: parseInt(formData.minOrders) || 0 }),
+        };
+        
+        if (isUpdate) {
+          data.id = initialData._id;
+          await couponService.updateCoupon(data);
+        } else {
+          await couponService.createCoupon(data);
         }
-      };
-
+        await fetchCoupons();
+        onSubmit();
+      } catch (err) {
+        setFormError(err.message || 'An error occurred');
+      } finally {
+        setFormLoading(false);
+      }
+    };
 
     return (
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Display form-specific error */}
-        {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
-        <div>
-          <label htmlFor="code" className="block text-sm font-medium text-gray-700">Coupon Code</label>
-          <input
-            type="text"
-            id="code"
-            name="code"
-            value={formData.code}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {formError && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+            {formError}
+          </div>
+        )}
+
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label htmlFor="couponType" className="text-base font-medium">Coupon Type</Label>
+              <Select
+                value={formData.couponType}
+                onValueChange={(value) => handleChange('couponType', value)}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select coupon type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MaxUsage">
+                    <div className="flex items-center gap-2">
+                      <Percent className="h-4 w-4" />
+                      <span>Normal Coupon</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="MinOrders">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <span>Minimum Orders</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="code" className="text-base font-medium">Coupon Code</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => handleChange('code', e.target.value)}
+                placeholder="Enter coupon code"
+                required
+                className="mt-2"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium">Basic Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expiry">Expiry Date</Label>
+                  <Input
+                    type="date"
+                    id="expiry"
+                    value={formData.expiry}
+                    onChange={(e) => handleChange('expiry', e.target.value)}
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="minValue">Minimum Value (₹)</Label>
+                  <Input
+                    id="minValue"
+                    type="number"
+                    value={formData.minValue}
+                    onChange={(e) => handleChange('minValue', e.target.value)}
+                    placeholder="Enter minimum value"
+                    required
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="offValue">Discount Value (₹)</Label>
+                  <Input
+                    id="offValue"
+                    type="number"
+                    value={formData.offValue}
+                    onChange={(e) => handleChange('offValue', e.target.value)}
+                    placeholder="Enter discount value"
+                    required
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium">Usage Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="maxUsage">Maximum Usage</Label>
+                  <Input
+                    id="maxUsage"
+                    type="number"
+                    value={formData.maxUsage}
+                    onChange={(e) => handleChange('maxUsage', e.target.value)}
+                    placeholder="Enter maximum usage"
+                    required
+                    min="1"
+                    step="1"
+                  />
+                </div>
+
+                {formData.couponType === 'MinOrders' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="minOrders">Minimum Orders Required</Label>
+                    <Input
+                      id="minOrders"
+                      type="number"
+                      value={formData.minOrders}
+                      onChange={(e) => handleChange('minOrders', e.target.value)}
+                      placeholder="Enter minimum orders"
+                      required
+                      min="1"
+                      step="1"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <div>
-          <label htmlFor="expiry" className="block text-sm font-medium text-gray-700">Expiry Date</label>
-          <input
-            type="date"
-            id="expiry"
-            name="expiry"
-            value={formData.expiry}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="minValue" className="block text-sm font-medium text-gray-700">Minimum Value (₹)</label>
-          <input
-            type="number"
-            id="minValue"
-            name="minValue"
-            value={formData.minValue}
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="maxUsage" className="block text-sm font-medium text-gray-700">Max Usage</label>
-          <input
-            type="number"
-            id="maxUsage"
-            name="maxUsage"
-            value={formData.maxUsage}
-            onChange={handleChange}
-            required
-            min="1"
-            step="1"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="offValue" className="block text-sm font-medium text-gray-700">Discount Value (₹)</label>
-          <input
-            type="number"
-            id="offValue"
-            name="offValue"
-            value={formData.offValue}
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          />
-        </div>
-        <div className="flex justify-end space-x-3 pt-2">
-          <button
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button
             type="button"
+            variant="outline"
             onClick={onSubmit}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={formLoading} // Use form-specific loading state
-            className={`px-4 py-2 rounded-md text-white ${
-              formLoading ? 'bg-green-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'
-            } focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-1`}
+            disabled={formLoading}
+            className="bg-green-600 hover:bg-green-700"
           >
-            {formLoading ? 'Saving...' : (isUpdate ? 'Update Coupon' : 'Create Coupon')}
-          </button>
+            {formLoading ? (
+              <div className="flex items-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Saving...
+              </div>
+            ) : (
+              isUpdate ? 'Update Coupon' : 'Create Coupon'
+            )}
+          </Button>
         </div>
       </form>
     );
   };
 
   // Modal Component - UPDATED with border and green title
-  const Modal = ({ isOpen, onClose, children, title }) => {
-    if (!isOpen) return null;
-
+  const CouponDialog = ({ isOpen, onClose, children, title }) => {
     return (
-        <div
-        className="fixed inset-0 bg-none bg-opacity-30 backdrop-blur-[2px] border border-gray-300 flex items-center justify-center z-50 p-4"
-        onClick={onClose}
-        >
-        {/* Modal Content */}
-        <div
-          className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl relative border-2 border-gray-300"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Modal Header */}
-          <div className="flex justify-between items-center mb-4 border-b pb-2">
-             <h2 className="text-xl font-semibold text-green-600">{title}</h2>
-             <button
-                onClick={onClose}
-                aria-label="Close modal"
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-             >
-                &times;
-             </button>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-green-600">{title}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {children}
           </div>
-          {/* Modal Body */}
-          {children}
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     );
   };
-
 
   // Coupon List Component
   const CouponList = () => {
@@ -282,9 +350,11 @@ const CouponManager = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount ($)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Value ($)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount (₹)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Value (₹)</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Usage</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Min Orders</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -294,37 +364,59 @@ const CouponManager = () => {
                 {coupons.map((coupon) => (
                   <tr key={coupon._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{coupon.couponCode}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <Badge 
+                        variant={coupon.couponType === 'MinOrders' ? 'secondary' : 'outline'} 
+                        className={`flex items-center gap-1 ${
+                          coupon.couponType === 'MinOrders' 
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                            : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                        }`}
+                      >
+                        {coupon.couponType === 'MinOrders' ? (
+                          <>
+                            <Package className="h-3 w-3" />
+                            Min Orders
+                          </>
+                        ) : (
+                          <>
+                            <Percent className="h-3 w-3" />
+                            Normal
+                          </>
+                        )}
+                      </Badge>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{coupon.offValue?.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{coupon.minValue?.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{coupon.maxUsage}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {coupon.couponType === 'MinOrders' ? coupon.minOrders : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {new Date(coupon.expiry).toLocaleDateString('en-CA')}
                     </td>
-                    {/* --- STATUS COLUMN UPDATED --- */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                       {/* Flex container to align toggle and text */}
                       <div className="flex items-center space-x-2">
                         <ToggleSwitch
                           isActive={coupon.isActive}
                           onToggle={() => handleToggleStatus(coupon)}
                         />
-                         {/* Status text label */}
                         <span className={`text-xs font-semibold ${
-                            coupon.isActive ? 'text-green-700' : 'text-gray-500' // Use gray for inactive for better contrast/less jarring than red
-                          }`}
-                        >
+                          coupon.isActive ? 'text-green-700' : 'text-gray-500'
+                        }`}>
                           {coupon.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                     </td>
-                    {/* --- END STATUS COLUMN UPDATE --- */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEditCoupon(coupon)}
-                        className="text-green-600 hover:text-green-800 hover:underline"
+                        className="text-green-600 hover:text-green-800"
                       >
                         Edit
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -341,17 +433,17 @@ const CouponManager = () => {
     <div className="max-w-7xl mx-auto p-6 md:p-8 bg-white min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Coupon Management</h1>
-        <button
+        <Button
           onClick={() => {
-              setSelectedCoupon(null);
-              setError(null);
-              setIsCreateModalOpen(true);
-            }
-          }
-          className="px-5 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-1 transition duration-150 ease-in-out shadow-sm whitespace-nowrap"
+            setSelectedCoupon(null);
+            setError(null);
+            setIsCreateModalOpen(true);
+          }}
+          className="bg-green-600 hover:bg-green-700"
         >
-          + Create Coupon
-        </button>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Coupon
+        </Button>
       </div>
 
        {/* Display global error messages outside the list */}
@@ -364,18 +456,18 @@ const CouponManager = () => {
          </div>
        )}
 
-      <Modal
+      <CouponDialog
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Create New Coupon"
       >
         <CouponForm
           onSubmit={() => setIsCreateModalOpen(false)}
-          key={`create-${Date.now()}`} // Ensures form resets if reopened quickly
+          key={`create-${Date.now()}`}
         />
-      </Modal>
+      </CouponDialog>
 
-      <Modal
+      <CouponDialog
         isOpen={isUpdateModalOpen}
         onClose={() => {
           setIsUpdateModalOpen(false);
@@ -384,17 +476,17 @@ const CouponManager = () => {
         title="Update Coupon"
       >
         {selectedCoupon && (
-            <CouponForm
-                onSubmit={() => {
-                    setIsUpdateModalOpen(false);
-                    setSelectedCoupon(null);
-                }}
-                initialData={selectedCoupon}
-                isUpdate={true}
-                key={selectedCoupon._id} // Key ensures form state resets for different coupons
-            />
+          <CouponForm
+            onSubmit={() => {
+              setIsUpdateModalOpen(false);
+              setSelectedCoupon(null);
+            }}
+            initialData={selectedCoupon}
+            isUpdate={true}
+            key={selectedCoupon._id}
+          />
         )}
-      </Modal>
+      </CouponDialog>
 
       {/* Render loading indicator OR the list */}
        {loading ? <p className="text-center text-gray-500 py-10">Loading...</p> : <CouponList />}

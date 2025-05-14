@@ -102,9 +102,9 @@ export default function StoreOrderManagement() {
     try {
       setUpdatingOrder(orderId);
       await orderService.updateOrder({ 
-        orderId, 
-        storeId, 
-        status: newStatus 
+        orderId,
+        storeId,
+        newStatus
       });
       toast.success('Order status updated successfully');
       // Refresh orders after update
@@ -167,6 +167,12 @@ export default function StoreOrderManagement() {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
+  const handlePageChange = async (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, currentPage: newPage }));
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -185,6 +191,7 @@ export default function StoreOrderManagement() {
                 <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Total</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -238,6 +245,18 @@ export default function StoreOrderManagement() {
                         )}
                       </TableCell>
                       <TableCell>
+                        <div className="text-sm">
+                          {order.isCashOnDelivery ? (
+                            <span className="text-orange-500">Cash on Delivery</span>
+                          ) : (
+                            <span className="text-green-500">Online Payment</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.paymentStatus}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Badge className={statusColors[order.status]}>
                           {order.status}
                         </Badge>
@@ -249,7 +268,14 @@ export default function StoreOrderManagement() {
                             disabled={updatingOrder === order.orderId}
                           >
                             <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Update status" />
+                              {updatingOrder === order.orderId ? (
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>Updating...</span>
+                                </div>
+                              ) : (
+                                <SelectValue placeholder="Update status" />
+                              )}
                             </SelectTrigger>
                             <SelectContent>
                               {getAvailableStatuses(order.status).map((status) => (
@@ -332,6 +358,39 @@ export default function StoreOrderManagement() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination Controls */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1 || loading}
+                className="flex items-center gap-2"
+              >
+                {loading && pagination.currentPage > 1 ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
+                Previous
+              </Button>
+              <span className="text-sm text-gray-500">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.totalPages || loading}
+                className="flex items-center gap-2"
+              >
+                {loading && pagination.currentPage < pagination.totalPages ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
