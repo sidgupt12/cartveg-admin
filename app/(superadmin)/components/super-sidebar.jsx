@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BadgeDollarSign, Bell, Home, ListOrderedIcon, Package, Store, Ticket, Users2 } from "lucide-react"
+import { BadgeDollarSign, Bell, Home, ListOrderedIcon, Package, Phone, Store, Ticket, Users2 } from "lucide-react"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, 
          SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 
@@ -52,6 +52,12 @@ const items = [
     url: "/admin-dashboard/Orders",
     icon: ListOrderedIcon,
   },
+  {
+    title: "App Management",
+    url: "/admin-dashboard/appManagement",
+    icon: Phone,
+  },
+
 ]
 
 export function AppSidebar() {

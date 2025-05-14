@@ -206,6 +206,48 @@ export const userService = {
         throw error;
       }
     },
+
+    addManualCredit: async ({ userId, amount, description }) => {
+      try {
+        // Validate required fields
+        if (!userId) {
+          throw new Error('User ID is required');
+        }
+        if (!amount || typeof amount !== 'number' || amount <= 0) {
+          throw new Error('Amount is required and must be a positive number');
+        }
+        if (!description || typeof description !== 'string') {
+          throw new Error('Description is required and must be a string');
+        }
+
+        console.log('Adding manual credit with data:', { userId, amount, description });
+
+        const response = await superApi.post('/admin/wallet/add', {
+          userId,
+          amount,
+          description,
+        });
+
+        console.log('Add manual credit API response:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error adding manual credit:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+
+        if (error.response?.status === 401) {
+          throw new Error('Unauthorized: Invalid or expired token');
+        } else if (error.response?.status === 400) {
+          throw new Error(error.response.data.message || 'Invalid credit data provided');
+        } else if (error.response?.status === 404) {
+          throw new Error('User not found');
+        }
+
+        throw error;
+      }
+    },
 };
 
 export const storeService = {
@@ -1017,6 +1059,110 @@ export const orderService = {
         throw new Error(error.response.data.message || 'Invalid order data provided');
       } else if (error.response?.status === 404) {
         throw new Error('Order not found');
+      }
+
+      throw error;
+    }
+  },
+};
+
+export const appService = {
+  getAppDetails: async () => {
+    try {
+      console.log('Fetching app details');
+      
+      const response = await superApi.get('/user/app');
+      
+      console.log('Get app details API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching app details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid request');
+      }
+
+      throw error;
+    }
+  },
+
+  updateAppDetails: async ({
+    bannerImages,
+    privacyPolicy,
+    termsAndConditions,
+    aboutUs,
+    contactno,
+    email,
+    deliveryTime,
+    address,
+    refAmount,
+  }) => {
+    try {
+      // Validate required fields
+      if (!bannerImages || !Array.isArray(bannerImages)) {
+        throw new Error('bannerImages is required and must be an array');
+      }
+      if (!privacyPolicy || typeof privacyPolicy !== 'string') {
+        throw new Error('privacyPolicy is required and must be a string');
+      }
+      if (!termsAndConditions || typeof termsAndConditions !== 'string') {
+        throw new Error('termsAndConditions is required and must be a string');
+      }
+      if (!aboutUs || typeof aboutUs !== 'string') {
+        throw new Error('aboutUs is required and must be a string');
+      }
+      if (!contactno || typeof contactno !== 'string') {
+        throw new Error('contactno is required and must be a string');
+      }
+      if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('email is required and must be a valid email address');
+      }
+      if (!deliveryTime || typeof deliveryTime !== 'string') {
+        throw new Error('deliveryTime is required and must be a string');
+      }
+      if (!address || typeof address !== 'string') {
+        throw new Error('address is required and must be a string');
+      }
+      if (refAmount === undefined || typeof refAmount !== 'number' || refAmount < 0) {
+        throw new Error('refAmount is required and must be a non-negative number');
+      }
+
+      const payload = {
+        appName: "cartVeg",
+        bannerImages,
+        privacyPolicy,
+        termsAndConditions,
+        aboutUs,
+        contactno,
+        email,
+        deliveryTime,
+        address,
+        refAmount,
+      };
+
+      console.log('Updating app details with data:', payload);
+
+      const response = await superApi.put('/admin/app/update', payload);
+
+      console.log('Update app details API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating app details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (error.response?.status === 401) {
+        throw new Error('Unauthorized: Invalid or expired token');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid app details provided');
       }
 
       throw error;

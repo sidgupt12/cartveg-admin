@@ -18,6 +18,7 @@ const UserManagement = () => {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
   const [isUpdatePopupOpen, setIsUpdatePopupOpen] = useState(false);
   const [isOrdersDialogOpen, setIsOrdersDialogOpen] = useState(false);
+  const [isAddCreditDialogOpen, setIsAddCreditDialogOpen] = useState(false);
   const [selectedUserOrders, setSelectedUserOrders] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -25,9 +26,14 @@ const UserManagement = () => {
     email: '',
     phone: '',
   });
+  const [creditForm, setCreditForm] = useState({
+    amount: '',
+    description: '',
+  });
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState({});
   const [formLoading, setFormLoading] = useState(false);
+  const [creditLoading, setCreditLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -199,6 +205,46 @@ const UserManagement = () => {
     setIsOrdersDialogOpen(true);
   };
 
+  // Add this new function for handling credit addition
+  const handleAddCredit = async (e) => {
+    e.preventDefault();
+    setCreditLoading(true);
+    try {
+      const response = await userService.addManualCredit({
+        userId: selectedUser._id,
+        amount: Number(creditForm.amount),
+        description: creditForm.description,
+      });
+      
+      toast.success('Credit added successfully', {
+        description: `₹${creditForm.amount} added to ${selectedUser.name}'s wallet`,
+      });
+      
+      setIsAddCreditDialogOpen(false);
+      setCreditForm({ amount: '', description: '' });
+    } catch (err) {
+      if (err.message.includes('Unauthorized')) {
+        setError('Session expired. Please log in again.');
+        Cookies.remove('token');
+        router.push('/login');
+      } else {
+        toast.error('Failed to add credit', {
+          description: err.message,
+        });
+      }
+    } finally {
+      setCreditLoading(false);
+    }
+  };
+
+  // Add this function to open credit dialog
+  const openAddCreditDialog = (user, e) => {
+    e.stopPropagation();
+    setSelectedUser(user);
+    setCreditForm({ amount: '', description: '' });
+    setIsAddCreditDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -275,10 +321,7 @@ const UserManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Credit functionality coming soon!");
-                        }}
+                        onClick={(e) => openAddCreditDialog(user, e)}
                         className="text-green-600 hover:text-green-700"
                       >
                         <CreditCard className="h-4 w-4 mr-2" />
@@ -563,6 +606,59 @@ const UserManagement = () => {
                 ))}
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Credit Dialog */}
+        <Dialog open={isAddCreditDialogOpen} onOpenChange={setIsAddCreditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Credit to Wallet</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAddCredit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Amount (₹)</label>
+                <Input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={creditForm.amount}
+                  onChange={(e) => setCreditForm({ ...creditForm, amount: e.target.value })}
+                  required
+                  min="1"
+                  step="0.01"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Input
+                  type="text"
+                  placeholder="Enter description"
+                  value={creditForm.description}
+                  onChange={(e) => setCreditForm({ ...creditForm, description: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddCreditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={creditLoading || !creditForm.amount || !creditForm.description}
+                >
+                  {creditLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    'Add Credit'
+                  )}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
