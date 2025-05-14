@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Upload } from "lucide-react";
+import { CalendarIcon, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Upload, Download } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { reportService } from '@/services/storeservice';
@@ -32,6 +32,7 @@ export default function Report() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadDate, setUploadDate] = useState(new Date());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const formatDateForAPI = (date) => {
     return format(date, 'yyyy-MM-dd');
@@ -103,14 +104,23 @@ export default function Report() {
       // Refresh the current report
       fetchReport(date);
       
-      // Reset form
+      // Reset form and close dialog
       setSelectedFile(null);
       setUploadDate(new Date());
+      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error uploading report:', error);
       toast.error(error.response?.data?.error || 'Failed to upload report');
     } finally {
       setUploadLoading(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      await reportService.downloadTemplate();
+    } catch (error) {
+      toast.error('Failed to download template');
     }
   };
 
@@ -143,7 +153,15 @@ export default function Report() {
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Daily Report</h2>
         <div className="flex items-center gap-4">
-          <Dialog>
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={handleDownloadTemplate}
+          >
+            <Download className="h-4 w-4" />
+            Download Template
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Upload className="h-4 w-4" />

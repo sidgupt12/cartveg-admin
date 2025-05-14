@@ -47,6 +47,7 @@ export default function StoreOrderManagement() {
   const [loading, setLoading] = useState(true);
   const [updatingOrder, setUpdatingOrder] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [sortOrder, setSortOrder] = useState('desc');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -71,7 +72,7 @@ export default function StoreOrderManagement() {
           page: pagination.currentPage,
           limit: 10,
           sortBy: 'date',
-          sortOrder: 'desc'
+          sortOrder
         });
         
         if (response?.data?.success && response?.data?.data) {
@@ -96,7 +97,7 @@ export default function StoreOrderManagement() {
     };
 
     fetchOrders();
-  }, [storeId, pagination.currentPage]);
+  }, [storeId, pagination.currentPage, sortOrder]);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
@@ -113,7 +114,7 @@ export default function StoreOrderManagement() {
         page: pagination.currentPage,
         limit: 10,
         sortBy: 'date',
-        sortOrder: 'desc'
+        sortOrder
       });
       if (response?.data?.success && response?.data?.data) {
         const { orders } = response.data.data;
@@ -177,8 +178,19 @@ export default function StoreOrderManagement() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Store Orders</CardTitle>
-        <div className="text-sm text-gray-500">
-          Total Orders: {pagination.totalOrders} | Page {pagination.currentPage} of {pagination.totalPages}
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-500">
+            Total Orders: {pagination.totalOrders} | Page {pagination.currentPage} of {pagination.totalPages}
+          </div>
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort order" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Oldest First</SelectItem>
+              <SelectItem value="desc">Newest First</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>

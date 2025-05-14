@@ -1,7 +1,8 @@
 'use client';
 
-import OrderManagement from '@/components/OrderManagement';
+
 import React from 'react';
+import OrderManagement from '../../components/OrderManagement';
 
 const OrdersPage = () => {
   return (

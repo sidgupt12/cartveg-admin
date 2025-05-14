@@ -262,6 +262,23 @@ export const reportService = {
     }
   },
 
+  downloadTemplate: async () => {
+    try {
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/report/download-template`;
+      link.setAttribute('download', 'purchase-report-template.csv');
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      throw new Error('Failed to download template');
+    }
+  },
+
   getDailyReport: 
   async (storeId, date) => {
     try {

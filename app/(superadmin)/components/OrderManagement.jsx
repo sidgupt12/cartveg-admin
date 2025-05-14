@@ -34,6 +34,13 @@ const statusColors = {
   cancelled: 'bg-red-500',
 };
 
+const paymentStatusColors = {
+  pending: 'bg-yellow-500',
+  completed: 'bg-green-500',
+  failed: 'bg-red-500',
+  refunded: 'bg-purple-500',
+};
+
 const statusFlow = {
   placed: ['shipped', 'cancelled'],
   shipped: ['delivered', 'cancelled'],
@@ -175,8 +182,9 @@ export default function OrderManagement() {
                 <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Payment Method</TableHead>
+                <TableHead>Payment Status</TableHead>
+                <TableHead>Order Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -228,28 +236,19 @@ export default function OrderManagement() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColors[order.status]}>
-                          {order.status}
+                        <Badge variant="outline" className="capitalize">
+                          {order.isCashOnDelivery ? 'Cash on Delivery' : 'Online Payment'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {getAvailableStatuses(order.status).length > 0 && (
-                          <Select
-                            onValueChange={(value) => handleStatusUpdate(order.orderId, value)}
-                            disabled={updatingOrder === order.orderId}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Update status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableStatuses(order.status).map((status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                        <Badge className={paymentStatusColors[order.paymentStatus] || 'bg-gray-500'}>
+                          {order.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[order.status]}>
+                          {order.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                     {expandedOrder === order._id && (
@@ -262,12 +261,6 @@ export default function OrderManagement() {
                                 <div className="space-y-2">
                                   <div className="text-sm">
                                     <span className="text-gray-500">Invoice ID:</span> {order.invoiceId}
-                                  </div>
-                                  <div className="text-sm">
-                                    <span className="text-gray-500">Payment Status:</span> {order.paymentStatus}
-                                  </div>
-                                  <div className="text-sm">
-                                    <span className="text-gray-500">Payment Method:</span> {order.isCashOnDelivery ? 'Cash on Delivery' : 'Online Payment'}
                                   </div>
                                   <div className="text-sm">
                                     <span className="text-gray-500">Expected Delivery:</span> {format(new Date(order.expectedDeliveryDate), 'MMM dd, yyyy')}
