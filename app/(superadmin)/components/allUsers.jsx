@@ -289,8 +289,8 @@ const UserManagement = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-500 mt-1">Manage and monitor user accounts</p>
+            <h1 className="text-3xl font-bold text-gray-900">Customer Management</h1>
+            <p className="text-gray-500 mt-1">Manage and monitor customer accounts</p>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <div className="relative">
@@ -307,7 +307,7 @@ const UserManagement = () => {
               onClick={() => setIsAddPopupOpen(true)}
               className="bg-green-600 hover:bg-green-700"
             >
-              <Plus className="h-5 w-5 mr-2" /> Add User
+              <Plus className="h-5 w-5 mr-2" /> Add Customer
             </Button>
           </div>
         </div>
@@ -516,14 +516,25 @@ const UserManagement = () => {
         )}
 
         {/* Add User Dialog */}
-        <Dialog open={isAddPopupOpen} onOpenChange={setIsAddPopupOpen}>
+        <Dialog open={isAddPopupOpen} onOpenChange={(open) => {
+          setIsAddPopupOpen(open);
+          if (!open) {
+            setFormData({
+              name: '',
+              email: '',
+              phone: '',
+            });
+          }
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddUser} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">
+                  Name<span className="text-red-500">*</span>
+                </label>                
                 <Input
                   type="text"
                   placeholder="Enter name"
@@ -532,8 +543,10 @@ const UserManagement = () => {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+              <div className="space-y-2">            
+                <label className="text-sm font-medium">
+                  Email<span className="text-red-500">*</span>
+                </label>                
                 <Input
                   type="email"
                   placeholder="Enter email"
@@ -543,7 +556,9 @@ const UserManagement = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
+                <label className="text-sm font-medium">
+                  Phone<span className="text-red-500">*</span>
+                </label>
                 <Input
                   type="text"
                   placeholder="Enter phone number"
@@ -558,14 +573,21 @@ const UserManagement = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsAddPopupOpen(false)}
+                  onClick={() => {
+                    setIsAddPopupOpen(false);
+                    setFormData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                    });
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   className="bg-green-600 hover:bg-green-700"
-                  disabled={formLoading}
+                  disabled={formLoading || !formData.name.trim() || !formData.email.trim() || !formData.phone.trim()}
                 >
                   {formLoading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -586,7 +608,9 @@ const UserManagement = () => {
             </DialogHeader>
             <form onSubmit={handleUpdateUser} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">
+                  Name<span className="text-red-500">*</span>
+                </label>
                 <Input
                   type="text"
                   placeholder="Enter name"
@@ -595,7 +619,9 @@ const UserManagement = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
+                <label className="text-sm font-medium">
+                  Phone<span className="text-red-500">*</span>
+                </label>
                 <Input
                   type="text"
                   placeholder="Enter phone number"
@@ -614,7 +640,7 @@ const UserManagement = () => {
                 <Button
                   type="submit"
                   className="bg-green-600 hover:bg-green-700"
-                  disabled={formLoading}
+                  disabled={formLoading || !formData.name.trim() || !formData.phone.trim()}
                 >
                   {formLoading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -664,7 +690,9 @@ const UserManagement = () => {
             </DialogHeader>
             <form onSubmit={handleAddCredit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Amount (₹)</label>
+                <label className="text-sm font-medium">
+                Amount (₹)<span className="text-red-500">*</span>
+                </label>                
                 <Input
                   type="number"
                   placeholder="Enter amount"
@@ -676,7 +704,9 @@ const UserManagement = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
+                <label className="text-sm font-medium">
+                  Description<span className="text-red-500">*</span>
+                </label>
                 <Input
                   type="text"
                   placeholder="Enter description"

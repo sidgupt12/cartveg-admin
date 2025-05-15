@@ -13,7 +13,7 @@ const items = [
     icon: Home,
   },
   {
-    title: "Users",
+    title: "Customer Management",
     url: "/admin-dashboard/Users",
     icon: Users2,
   },
